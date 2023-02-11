@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\starter-bots\IlhamBot\src\main\java\Models\GameObject.java
 E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\starter-bots\IlhamBot\src\main\java\Models\World.java
 E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\starter-bots\IlhamBot\src\main\java\Enums\ObjectTypes.java
@@ -8,3 +9,16 @@ E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\s
 E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\starter-bots\IlhamBot\src\main\java\Services\BotService.java
 E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\starter-bots\IlhamBot\src\main\java\Models\Position.java
 E:\Kuliah\Semester 4\IF2211 Strategi Algoritma\2 - Greedy\Tubes 1\starter-pack\starter-bots\IlhamBot\src\main\java\Enums\PlayerActions.java
+=======
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Models\GameState.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Models\GameStateDto.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Enums\PlayerActions.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Models\GameObject.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Models\Position.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Services\Eatfood.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Main.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Services\BotService.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Models\PlayerAction.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Models\World.java
+C:\Users\Haidar\Documents\Latihan coding\Tubes Stima 1\Tubes1_Artificial-Ilham\src\main\java\Enums\ObjectTypes.java
+>>>>>>> 5dabf5c923041795a789efbcca8b115b5870d984
