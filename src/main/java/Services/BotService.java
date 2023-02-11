@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.stream.*;
 
 public class BotService {
+    private Eatfood eatfoods;
     private GameObject bot;
     private PlayerAction playerAction;
     private GameState gameState;
@@ -39,18 +40,25 @@ public class BotService {
 
         // Bot is still in the game
         if (!gameState.getGameObjects().isEmpty()) {
-            var foodList = gameState.getGameObjects()
-                    .stream().filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
-                    .sorted(Comparator
-                            .comparing(item -> getDistanceBetween(bot, item)))
-                    .collect(Collectors.toList());
 
-            playerAction.heading = getHeadingBetween(foodList.get(0));
+            // var foodList = gameState.getGameObjects()
+            //         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
+            //         .sorted(Comparator
+            //                 .comparing(item -> getDistanceBetween(bot, item)))
+            //         .collect(Collectors.toList());
+
+            // playerAction.heading = getHeadingBetween(foodList.get(0));
+            playerAction = eatfood(playerAction, gameState, bot);
+
         }
         // Bot has been consumed
         else
         {
             System.out.println("I am ded.");
+
+
+            
+            // playerAction = eatfood(playerAction, gameState, bot);
         }
 
         this.playerAction = playerAction;
@@ -65,26 +73,121 @@ public class BotService {
         updateSelfState();
     }
 
-    private void updateSelfState() {
+    public void updateSelfState() {
         Optional<GameObject> optionalBot = gameState.getPlayerGameObjects().stream().filter(gameObject -> gameObject.id.equals(bot.id)).findAny();
         optionalBot.ifPresent(bot -> this.bot = bot);
     }
 
-    private double getDistanceBetween(GameObject object1, GameObject object2) {
+    public double getDistanceBetween(GameObject object1, GameObject object2) {
         var triangleX = Math.abs(object1.getPosition().x - object2.getPosition().x);
         var triangleY = Math.abs(object1.getPosition().y - object2.getPosition().y);
         return Math.sqrt(triangleX * triangleX + triangleY * triangleY);
     }
 
-    private int getHeadingBetween(GameObject otherObject) {
+    public int getHeadingBetween(GameObject otherObject) {
         var direction = toDegrees(Math.atan2(otherObject.getPosition().y - bot.getPosition().y,
                 otherObject.getPosition().x - bot.getPosition().x));
         return (direction + 360) % 360;
     }
 
-    private int toDegrees(double v) {
+    public int toDegrees(double v) {
         return (int) (v * (180 / Math.PI));
     }
+    public PlayerAction eatfood(PlayerAction playerAction, GameState gameState, GameObject bot) {
+        var foodlist = gameState.getGameObjects() 
+            .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD) 
+            .sorted(Comparator 
+                    .comparing(items -> getDistanceBetween(bot, items))) 
+            .collect(Collectors.toList());  
+                
+        var superfoodList = gameState.getGameObjects() 
+            .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD) 
+            .sorted(Comparator 
+                    .comparing(item -> getDistanceBetween(bot, item))) 
+            .collect(Collectors.toList()); 
+        
+        var obstacle = gameState.getGameObjects() 
+                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD || obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD) // this filters the list to only food
+                .sorted(Comparator 
+                        .comparing(obj -> getDistanceBetween(bot, obj))) 
+                .collect(Collectors.toList());
 
+        playerAction.action = PlayerActions.FORWARD;
+        if (getDistanceBetween(superfoodList.get(0), bot) < 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
+            playerAction.heading = getHeadingBetween(superfoodList.get(0));
+            System.out.println("sf");
+            
+
+        } else if (getDistanceBetween(superfoodList.get(0), bot) > 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
+            playerAction.heading = getHeadingBetween(foodlist.get(0));
+            System.out.println("f");
+        }
+        return playerAction;
+    }
+
+
+    public PlayerAction eatfood(PlayerAction playerAction, GameState gameState, GameObject bot) {
+        var foodlist = gameState.getGameObjects() 
+            .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD) 
+            .sorted(Comparator 
+                    .comparing(items -> getDistanceBetween(bot, items))) 
+            .collect(Collectors.toList());  
+                
+        var superfoodList = gameState.getGameObjects() 
+            .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD) 
+            .sorted(Comparator 
+                    .comparing(item -> getDistanceBetween(bot, item))) 
+            .collect(Collectors.toList()); 
+        
+        var obstacle = gameState.getGameObjects() 
+                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD || obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD) // this filters the list to only food
+                .sorted(Comparator 
+                        .comparing(obj -> getDistanceBetween(bot, obj))) 
+                .collect(Collectors.toList());
+
+        playerAction.action = PlayerActions.FORWARD;
+        if (getDistanceBetween(superfoodList.get(0), bot) < 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
+            playerAction.heading = getHeadingBetween(superfoodList.get(0));
+            System.out.println("sf");
+            
+
+        } else if (getDistanceBetween(superfoodList.get(0), bot) > 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
+            playerAction.heading = getHeadingBetween(foodlist.get(0));
+            System.out.println("f");
+        }
+        return playerAction;
+    }
+
+    public PlayerAction eatfood(PlayerAction playerAction, GameState gameState, GameObject bot) {
+        var foodlist = gameState.getGameObjects() 
+            .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD) 
+            .sorted(Comparator 
+                    .comparing(items -> getDistanceBetween(bot, items))) 
+            .collect(Collectors.toList());  
+                
+        var superfoodList = gameState.getGameObjects() 
+            .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD) 
+            .sorted(Comparator 
+                    .comparing(item -> getDistanceBetween(bot, item))) 
+            .collect(Collectors.toList()); 
+        
+        var obstacle = gameState.getGameObjects() 
+                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD || obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD) // this filters the list to only food
+                .sorted(Comparator 
+                        .comparing(obj -> getDistanceBetween(bot, obj))) 
+                .collect(Collectors.toList());
+
+        playerAction.action = PlayerActions.FORWARD;
+        if (getDistanceBetween(superfoodList.get(0), bot) < 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
+            playerAction.heading = getHeadingBetween(superfoodList.get(0));
+            System.out.println("sf");
+            
+
+        } else if (getDistanceBetween(superfoodList.get(0), bot) > 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
+            playerAction.heading = getHeadingBetween(foodlist.get(0));
+            System.out.println("f");
+        }
+        return playerAction;
+    }
 
 }
