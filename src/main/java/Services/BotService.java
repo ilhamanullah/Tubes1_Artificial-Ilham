@@ -37,6 +37,7 @@ public class BotService {
         playerAction.action = PlayerActions.FORWARD;
         playerAction.heading = new Random().nextInt(360);
 
+        // Bot is still in the game
         if (!gameState.getGameObjects().isEmpty()) {
             var foodList = gameState.getGameObjects()
                     .stream().filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
@@ -45,6 +46,11 @@ public class BotService {
                     .collect(Collectors.toList());
 
             playerAction.heading = getHeadingBetween(foodList.get(0));
+        }
+        // Bot has been consumed
+        else
+        {
+            System.out.println("I am ded.");
         }
 
         this.playerAction = playerAction;
