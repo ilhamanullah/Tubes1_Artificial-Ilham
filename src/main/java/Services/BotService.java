@@ -48,7 +48,29 @@ public class BotService {
             //         .collect(Collectors.toList());
 
             // playerAction.heading = getHeadingBetween(foodList.get(0));
+            // playerAction = eatfood(playerAction, gameState, bot);
+            // playerAction = fireTorpedo(playerAction, gameState, bot);
+
+            // if(gameState.world.currentTick == 60){
+            //     playerAction = fireTeleport(playerAction, gameState, bot);
+            // }
+            // else if(gameState.playerGameObjects.){
+            //     playerAction.action = PlayerActions.TELEPORT;
+            // }
+            if(gameState.world.currentTick >= 60 && gameState.world.currentTick <= 70){
+                playerAction = activateShield(playerAction, gameState, bot);
+            }
+            else{
+            //     var foodList = gameState.getGameObjects()
+            //         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
+            //         .sorted(Comparator
+            //                 .comparing(item -> getDistanceBetween(bot, item)))
+            //         .collect(Collectors.toList());
+
+            // playerAction.heading = getHeadingBetween(foodList.get(0));
             playerAction = eatfood(playerAction, gameState, bot);
+            }
+
 
         }
         // Bot has been consumed
@@ -124,4 +146,34 @@ public class BotService {
         }
         return playerAction;
     }
+    public PlayerAction fireTorpedo(PlayerAction playerAction, GameState gameState, GameObject bot) {
+        var enemies = gameState.getPlayerGameObjects()
+            .stream().filter(items -> items.getGameObjectType() == ObjectTypes.PLAYER)
+            .sorted(Comparator
+                    .comparing(items -> getDistanceBetween(bot, items)))
+            .collect(Collectors.toList());
+
+        playerAction.heading = getHeadingBetween(enemies.get(1));
+        playerAction.action = PlayerActions.FIRETORPEDOES; 
+
+        return playerAction;
+    }
+    public PlayerAction fireTeleport(PlayerAction playerAction, GameState gameState, GameObject bot){
+        var enemies = gameState.getPlayerGameObjects()
+            .stream().filter(items-> items.getGameObjectType() == ObjectTypes.PLAYER && items.getId() != bot.getId())
+            .sorted(Comparator
+                    .comparing(items -> getDistanceBetween(bot, items)))
+            .collect(Collectors.toList());
+
+            playerAction.heading = getHeadingBetween(enemies.get(0));
+            playerAction.action = PlayerActions.FIRETELEPORT;
+
+            return playerAction;
+    }
+
+    public PlayerAction activateShield(PlayerAction playerAction, GameState gameState, GameObject bot){
+        playerAction.action = PlayerActions.ACTIVATESHIELD;
+        return playerAction;
+    }
+
 }
