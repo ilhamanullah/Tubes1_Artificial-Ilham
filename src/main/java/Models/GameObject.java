@@ -50,6 +50,10 @@ public class GameObject {
     return speed;
   }
 
+  public int getHeading() {
+    return currentHeading;
+  }
+
   public void setSpeed(int speed) {
     this.speed = speed;
   }
