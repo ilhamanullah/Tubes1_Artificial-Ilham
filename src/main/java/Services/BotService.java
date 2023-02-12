@@ -34,25 +34,6 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
-    public void computeNextPlayerAction(PlayerAction playerAction) {
-        playerAction.action = PlayerActions.FORWARD;
-        playerAction.heading = new Random().nextInt(360);
-
-        // Bot is still in the game
-        if (!gameState.getGameObjects().isEmpty()) {
-
-            if(!playerIsDead(gameState, bot)) {
-                playerAction = avoidAsteroidField(playerAction, gameState, bot);
-                playerAction = avoidGasCloud(playerAction, gameState, bot);
-                playerAction = eatfood(playerAction, gameState, bot);
-            } else {
-                System.out.println("I DED.");
-            }
-        }
-
-        this.playerAction = playerAction;
-    }
-
     public GameState getGameState() {
         return this.gameState;
     }
@@ -73,99 +54,90 @@ public class BotService {
         return Math.sqrt(triangleX * triangleX + triangleY * triangleY);
     }
 
+    public double getDistanceBetweenEdge(GameObject object1, GameObject object2) {
+        return getDistanceBetween(object1, object2) - (object1.getSize()/2) - (object2.getSize()/2);
+    }
+
     public int getHeadingBetween(GameObject otherObject) {
         var direction = toDegrees(Math.atan2(otherObject.getPosition().y - bot.getPosition().y,
                 otherObject.getPosition().x - bot.getPosition().x));
         return (direction + 360) % 360;
     }
 
-    public int getOppositeHeadingBetween(GameObject otherObject) {
+    public int getSpecifiedHeadingBetween(GameObject otherObject, int degrees) {
         var direction = toDegrees(Math.atan2(otherObject.getPosition().y - bot.getPosition().y,
                 otherObject.getPosition().x - bot.getPosition().x));
-        return (direction + 180) % 360;
+        return (direction + degrees) % 360;
     }
 
     public int toDegrees(double v) {
         return (int) (v * (180 / Math.PI));
     }
 
-    // Avoid Asteroid Field
-    public PlayerAction avoidAsteroidField(PlayerAction playerAction, GameState gameState, GameObject bot) {
-        var asteroidFieldList = gameState.getGameObjects() 
+    // ====================== COMPUTE NEXT PLAYER ACTION ====================== //
+
+    public void computeNextPlayerAction(PlayerAction playerAction) {
+        playerAction.action = PlayerActions.FORWARD;
+        playerAction.heading = new Random().nextInt(360);
+
+        // Bot is still in the game
+        // if (!gameState.getGameObjects().isEmpty()) {
+        if (!gameState.getGameObjects().isEmpty()) {
+
+            // Get Nearest Food
+            var nearestFood = gameState.getGameObjects() 
+                .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD) 
+                .sorted(Comparator 
+                        .comparing(items -> getDistanceBetween(bot, items))) 
+                .collect(Collectors.toList()).get(0);
+        
+            // Get Nearest Super Food
+            var nearestSuperFood = gameState.getGameObjects() 
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD) 
+                .sorted(Comparator 
+                        .comparing(item -> getDistanceBetween(bot, item))) 
+                .collect(Collectors.toList()).get(0);
+
+            // Get Nearest Asteroid Field
+            var nearestAsteroidField = gameState.getGameObjects() 
                 .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD)
                 .sorted(Comparator 
                         .comparing(obj -> getDistanceBetween(bot, obj))) 
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()).get(0);
 
-        if(getDistanceBetween(bot, asteroidFieldList.get(0)) - (bot.getSize()/2) < 100)
-        {
-            playerAction.action = PlayerActions.FORWARD;
-            playerAction.heading = getOppositeHeadingBetween(asteroidFieldList.get(0));
-            System.out.println("AVOIDING ASTEROID FIELD.");
-        }
-        
-        return playerAction;
-    }
-
-    // Avoid Gas Cloud
-    public PlayerAction avoidGasCloud(PlayerAction playerAction, GameState gameState, GameObject bot) {
-        var gasCloudList = gameState.getGameObjects() 
+            // Get Nearest Gas Cloud
+            var nearestGasCloud = gameState.getGameObjects() 
                 .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD)
                 .sorted(Comparator 
                         .comparing(obj -> getDistanceBetween(bot, obj))) 
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()).get(0);
 
-        if(getDistanceBetween(bot, gasCloudList.get(0)) - (bot.getSize()/2) < 100)
-        {
             playerAction.action = PlayerActions.FORWARD;
-            playerAction.heading = getOppositeHeadingBetween(gasCloudList.get(0));
-            System.out.println("AVOIDING GAS CLOUD.");
-        }
-        
-        return playerAction;
-    }
 
-    // Ded (Minor Bug)
-    public boolean playerIsDead(GameState gameState, GameObject bot) {
-        var playerList = gameState.getPlayerGameObjects()
-            .stream().filter(bots -> bots.getGameObjectType() == ObjectTypes.PLAYER && bots.getId() == bot.getId())
-            .collect(Collectors.toList());
+            // Avoid Gas Cloud
+            if (getDistanceBetweenEdge(nearestGasCloud, bot) < 100) {
+                playerAction.heading = getSpecifiedHeadingBetween(nearestGasCloud, 90);
+                System.out.println("AVOIDING GAS CLOUD.");
 
-        return (playerList.isEmpty());
-    }
+            // Avoid Asteroid Field
+            } else if (getDistanceBetweenEdge(nearestAsteroidField, bot) < 100) {
+                playerAction.heading = getSpecifiedHeadingBetween(nearestAsteroidField, 90);
+                System.out.println("AVOIDING ASTEROID FIELD.");
 
-    // Eat Food (Prioritize Super Food)
-    public PlayerAction eatfood(PlayerAction playerAction, GameState gameState, GameObject bot) {
-        var foodlist = gameState.getGameObjects() 
-            .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD) 
-            .sorted(Comparator 
-                    .comparing(items -> getDistanceBetween(bot, items))) 
-            .collect(Collectors.toList());  
-                
-        var superfoodList = gameState.getGameObjects() 
-            .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD) 
-            .sorted(Comparator 
-                    .comparing(item -> getDistanceBetween(bot, item))) 
-            .collect(Collectors.toList()); 
-        
-        var obstacle = gameState.getGameObjects() 
-                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD || obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD) // this filters the list to only food
-                .sorted(Comparator 
-                        .comparing(obj -> getDistanceBetween(bot, obj))) 
-                .collect(Collectors.toList());
+            // Going For Food
+            } else {
 
-        playerAction.action = PlayerActions.FORWARD;
-        if (getDistanceBetween(superfoodList.get(0), bot) < 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
-            playerAction.heading = getHeadingBetween(superfoodList.get(0));
-            System.out.println("GOING FOR SUPERFOOD.");
-            
-
-        } else if (getDistanceBetween(superfoodList.get(0), bot) > 100 && getDistanceBetween(bot, obstacle.get(0)) > 30) {
-            playerAction.heading = getHeadingBetween(foodlist.get(0));
-            System.out.println("GOING FOR FOOD.");
+                // Prioritizing Super Food
+                if (getDistanceBetweenEdge(nearestSuperFood, bot) < getDistanceBetweenEdge(nearestFood, bot)) {
+                    playerAction.heading = getHeadingBetween(nearestSuperFood);
+                    System.out.println("GOING FOR SUPERFOOD.");
+                } else {
+                    playerAction.heading = getHeadingBetween(nearestFood);
+                    System.out.println("GOING FOR FOOD.");
+                }
+            }
         }
 
-        return playerAction;
+        this.playerAction = playerAction;
     }
-
 }
