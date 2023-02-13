@@ -107,6 +107,510 @@ public class BotService {
         return (direction + degrees) % 360;
     }
 
+    public double maxDistance(List<GameObject> objList) {
+
+        double max = 0;
+
+        for (int i = 0; i < objList.size(); i++) {
+            if (getDistanceBetween(objList.get(i), bot) > max) {
+                max = getDistanceBetween(objList.get(i), bot);
+            }
+        }
+
+        return max;
+    }
+
+    public double scoringKuadran1(GameState gameState) {
+
+        var smallerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() < bot.getSize()
+                        && player.getPosition().getX() >= bot.getPosition().getX()
+                        && player.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var biggerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() >= bot.getSize()
+                        && player.getPosition().getX() >= bot.getPosition().getX()
+                        && player.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var foodList = gameState.getGameObjects()
+                .stream()
+                .filter(food -> food.getGameObjectType() == ObjectTypes.FOOD
+                        && food.getPosition().getX() >= bot.getPosition().getX()
+                        && food.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(food -> getDistanceBetween(bot, food)))
+                .collect(Collectors.toList());
+
+        var superFoodList = gameState.getGameObjects()
+                .stream()
+                .filter(superFood -> superFood.getGameObjectType() == ObjectTypes.SUPERFOOD
+                        && superFood.getPosition().getX() >= bot.getPosition().getX()
+                        && superFood.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(superFood -> getDistanceBetween(bot, superFood)))
+                .collect(Collectors.toList());
+
+        var obstacleList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> (obj.getGameObjectType() == ObjectTypes.GAS_CLOUD
+                        || obj.getGameObjectType() == ObjectTypes.WORM_HOLE)
+                        && (obj.getPosition().getX() >= bot.getPosition().getX()
+                                && obj.getPosition().getY() >= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var asteroidFieldList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD
+                        && (obj.getPosition().getX() >= bot.getPosition().getX()
+                                && obj.getPosition().getY() >= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var torpedoList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO
+                        && (obj.getPosition().getX() >= bot.getPosition().getX()
+                                && obj.getPosition().getY() >= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        double score = 0;
+
+        // Smaller Enemy
+        for (int i = 0; i < smallerEnemyList.size(); i++) {
+            score += (bot.getSize() - smallerEnemyList.get(i).getSize() / bot.getSize())
+                    * (maxDistance(smallerEnemyList) - getDistanceBetween(bot, smallerEnemyList.get(i))
+                            / maxDistance(smallerEnemyList));
+        }
+
+        // Food
+        for (int i = 0; i < foodList.size(); i++) {
+            score += (maxDistance(foodList) - getDistanceBetween(bot, foodList.get(i)) / maxDistance(foodList));
+        }
+
+        // Super Food
+        for (int i = 0; i < superFoodList.size(); i++) {
+            score += 5 * ((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i))
+                    / maxDistance(superFoodList)));
+        }
+
+        // Bigger Enemy
+        for (int i = 0; i < biggerEnemyList.size(); i++) {
+            score += (bot.getSize() / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetween(bot, biggerEnemyList.get(i)) / maxDistance(biggerEnemyList));
+        }
+
+        // Obstacle
+        for (int i = 0; i < obstacleList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+        }
+
+        // Asteroid
+        for (int i = 0; i < asteroidFieldList.size(); i++) {
+            score += 10 * (getDistanceBetween(bot, asteroidFieldList.get(i)) / maxDistance(asteroidFieldList));
+        }
+
+        // Torpedo
+        for (int i = 0; i < torpedoList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+        }
+
+        return score;
+    }
+
+    public double scoringKuadran2(GameState gameState) {
+
+        var smallerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() < bot.getSize()
+                        && player.getPosition().getX() <= bot.getPosition().getX()
+                        && player.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var biggerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() >= bot.getSize()
+                        && player.getPosition().getX() <= bot.getPosition().getX()
+                        && player.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var foodList = gameState.getGameObjects()
+                .stream()
+                .filter(food -> food.getGameObjectType() == ObjectTypes.FOOD
+                        && food.getPosition().getX() <= bot.getPosition().getX()
+                        && food.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(food -> getDistanceBetween(bot, food)))
+                .collect(Collectors.toList());
+
+        var superFoodList = gameState.getGameObjects()
+                .stream()
+                .filter(superFood -> superFood.getGameObjectType() == ObjectTypes.SUPERFOOD
+                        && superFood.getPosition().getX() <= bot.getPosition().getX()
+                        && superFood.getPosition().getY() >= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(superFood -> getDistanceBetween(bot, superFood)))
+                .collect(Collectors.toList());
+
+        var obstacleList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> (obj.getGameObjectType() == ObjectTypes.GAS_CLOUD
+                        || obj.getGameObjectType() == ObjectTypes.WORM_HOLE)
+                        && (obj.getPosition().getX() <= bot.getPosition().getX()
+                                && obj.getPosition().getY() >= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var asteroidFieldList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD
+                        && (obj.getPosition().getX() <= bot.getPosition().getX()
+                                && obj.getPosition().getY() >= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var torpedoList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO
+                        && (obj.getPosition().getX() <= bot.getPosition().getX()
+                                && obj.getPosition().getY() >= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        double score = 0;
+
+        // Smaller Enemy
+        for (int i = 0; i < smallerEnemyList.size(); i++) {
+            score += (bot.getSize() - smallerEnemyList.get(i).getSize() / bot.getSize())
+                    * (maxDistance(smallerEnemyList) - getDistanceBetween(bot, smallerEnemyList.get(i))
+                            / maxDistance(smallerEnemyList));
+        }
+
+        // Food
+        for (int i = 0; i < foodList.size(); i++) {
+            score += (maxDistance(foodList) - getDistanceBetween(bot, foodList.get(i)) / maxDistance(foodList));
+        }
+
+        // Super Food
+        for (int i = 0; i < superFoodList.size(); i++) {
+            score += 5 * ((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i))
+                    / maxDistance(superFoodList)));
+        }
+
+        // Bigger Enemy
+        for (int i = 0; i < biggerEnemyList.size(); i++) {
+            score += (bot.getSize() / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetween(bot, biggerEnemyList.get(i)) / maxDistance(biggerEnemyList));
+        }
+
+        // Obstacle
+        for (int i = 0; i < obstacleList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+        }
+
+        // Asteroid
+        for (int i = 0; i < asteroidFieldList.size(); i++) {
+            score += 10 * (getDistanceBetween(bot, asteroidFieldList.get(i)) / maxDistance(asteroidFieldList));
+        }
+
+        // Torpedo
+        for (int i = 0; i < torpedoList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+        }
+
+        return score;
+    }
+
+    public double scoringKuadran3(GameState gameState) {
+
+        var smallerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() < bot.getSize()
+                        && player.getPosition().getX() <= bot.getPosition().getX()
+                        && player.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var biggerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() >= bot.getSize()
+                        && player.getPosition().getX() <= bot.getPosition().getX()
+                        && player.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var foodList = gameState.getGameObjects()
+                .stream()
+                .filter(food -> food.getGameObjectType() == ObjectTypes.FOOD
+                        && food.getPosition().getX() <= bot.getPosition().getX()
+                        && food.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(food -> getDistanceBetween(bot, food)))
+                .collect(Collectors.toList());
+
+        var superFoodList = gameState.getGameObjects()
+                .stream()
+                .filter(superFood -> superFood.getGameObjectType() == ObjectTypes.SUPERFOOD
+                        && superFood.getPosition().getX() <= bot.getPosition().getX()
+                        && superFood.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(superFood -> getDistanceBetween(bot, superFood)))
+                .collect(Collectors.toList());
+
+        var obstacleList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> (obj.getGameObjectType() == ObjectTypes.GAS_CLOUD
+                        || obj.getGameObjectType() == ObjectTypes.WORM_HOLE)
+                        && (obj.getPosition().getX() <= bot.getPosition().getX()
+                                && obj.getPosition().getY() <= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var asteroidFieldList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD
+                        && (obj.getPosition().getX() <= bot.getPosition().getX()
+                                && obj.getPosition().getY() <= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var torpedoList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO
+                        && (obj.getPosition().getX() <= bot.getPosition().getX()
+                                && obj.getPosition().getY() <= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        double score = 0;
+
+        // Smaller Enemy
+        for (int i = 0; i < smallerEnemyList.size(); i++) {
+            score += (bot.getSize() - smallerEnemyList.get(i).getSize() / bot.getSize())
+                    * (maxDistance(smallerEnemyList) - getDistanceBetween(bot, smallerEnemyList.get(i))
+                            / maxDistance(smallerEnemyList));
+        }
+
+        // Food
+        for (int i = 0; i < foodList.size(); i++) {
+            score += (maxDistance(foodList) - getDistanceBetween(bot, foodList.get(i)) / maxDistance(foodList));
+        }
+
+        // Super Food
+        for (int i = 0; i < superFoodList.size(); i++) {
+            score += 5 * ((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i))
+                    / maxDistance(superFoodList)));
+        }
+
+        // Bigger Enemy
+        for (int i = 0; i < biggerEnemyList.size(); i++) {
+            score += (bot.getSize() / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetween(bot, biggerEnemyList.get(i)) / maxDistance(biggerEnemyList));
+        }
+
+        // Obstacle
+        for (int i = 0; i < obstacleList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+        }
+
+        // Asteroid
+        for (int i = 0; i < asteroidFieldList.size(); i++) {
+            score += 10 * (getDistanceBetween(bot, asteroidFieldList.get(i)) / maxDistance(asteroidFieldList));
+        }
+
+        // Torpedo
+        for (int i = 0; i < torpedoList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+        }
+
+        return score;
+    }
+
+    public double scoringKuadran4(GameState gameState) {
+
+        var smallerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() < bot.getSize()
+                        && player.getPosition().getX() >= bot.getPosition().getX()
+                        && player.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var biggerEnemyList = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER && player.getId() != bot.getId()
+                        && player.getSize() >= bot.getSize()
+                        && player.getPosition().getX() >= bot.getPosition().getX()
+                        && player.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(bot, player)))
+                .collect(Collectors.toList());
+
+        var foodList = gameState.getGameObjects()
+                .stream()
+                .filter(food -> food.getGameObjectType() == ObjectTypes.FOOD
+                        && food.getPosition().getX() >= bot.getPosition().getX()
+                        && food.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(food -> getDistanceBetween(bot, food)))
+                .collect(Collectors.toList());
+
+        var superFoodList = gameState.getGameObjects()
+                .stream()
+                .filter(superFood -> superFood.getGameObjectType() == ObjectTypes.SUPERFOOD
+                        && superFood.getPosition().getX() >= bot.getPosition().getX()
+                        && superFood.getPosition().getY() <= bot.getPosition().getY())
+                .sorted(Comparator
+                        .comparing(superFood -> getDistanceBetween(bot, superFood)))
+                .collect(Collectors.toList());
+
+        var obstacleList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> (obj.getGameObjectType() == ObjectTypes.GAS_CLOUD
+                        || obj.getGameObjectType() == ObjectTypes.WORM_HOLE)
+                        && (obj.getPosition().getX() >= bot.getPosition().getX()
+                                && obj.getPosition().getY() <= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var asteroidFieldList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD
+                        && (obj.getPosition().getX() >= bot.getPosition().getX()
+                                && obj.getPosition().getY() <= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        var torpedoList = gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO
+                        && (obj.getPosition().getX() >= bot.getPosition().getX()
+                                && obj.getPosition().getY() <= bot.getPosition().getY()))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(bot, obj)))
+                .collect(Collectors.toList());
+
+        double score = 0;
+
+        // Smaller Enemy
+        for (int i = 0; i < smallerEnemyList.size(); i++) {
+            score += (bot.getSize() - smallerEnemyList.get(i).getSize() / bot.getSize())
+                    * (maxDistance(smallerEnemyList) - getDistanceBetween(bot, smallerEnemyList.get(i))
+                            / maxDistance(smallerEnemyList));
+        }
+
+        // Food
+        for (int i = 0; i < foodList.size(); i++) {
+            score += (maxDistance(foodList) - getDistanceBetween(bot, foodList.get(i)) / maxDistance(foodList));
+        }
+
+        // Super Food
+        for (int i = 0; i < superFoodList.size(); i++) {
+            score += 5 * ((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i))
+                    / maxDistance(superFoodList)));
+        }
+
+        // Bigger Enemy
+        for (int i = 0; i < biggerEnemyList.size(); i++) {
+            score += (bot.getSize() / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetween(bot, biggerEnemyList.get(i)) / maxDistance(biggerEnemyList));
+        }
+
+        // Obstacle
+        for (int i = 0; i < obstacleList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+        }
+
+        // Asteroid
+        for (int i = 0; i < asteroidFieldList.size(); i++) {
+            score += 10 * (getDistanceBetween(bot, asteroidFieldList.get(i)) / maxDistance(asteroidFieldList));
+        }
+
+        // Torpedo
+        for (int i = 0; i < torpedoList.size(); i++) {
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+        }
+
+        return score;
+    }
+
+    public int bestScore(double score1, double score2, double score3, double score4) {
+        if (score1 >= score2 && score1 >= score3 && score1 >= score4) {
+            return 1;
+        } else if (score2 >= score1 && score2 >= score3 && score2 >= score4) {
+            return 2;
+        } else if (score3 >= score1 && score3 >= score2 && score3 >= score4) {
+            return 3;
+        } else {
+            return 4;
+        }
+    }
+
+    public int scoring(GameState gameState) {
+
+        // Get current bot direction as kuadran
+        var botCurrentDirection = bot.getHeading();
+        var botFacing = 0;
+        if (botCurrentDirection > 0 && botCurrentDirection <= 90) {
+            botFacing = 1;
+        } else if (botCurrentDirection > 90 && botCurrentDirection <= 180) {
+            botFacing = 2;
+        } else if (botCurrentDirection > 180 && botCurrentDirection <= 270) {
+            botFacing = 3;
+        } else {
+            botFacing = 4;
+        }
+
+        var score1 = scoringKuadran1(gameState);
+        var score2 = scoringKuadran2(gameState);
+        var score3 = scoringKuadran3(gameState);
+        var score4 = scoringKuadran4(gameState);
+
+        if (botFacing == 1) {
+            return bestScore(0, score2, score3, score4);
+        } else if (botFacing == 2) {
+            return bestScore(score1, 0, score3, score4);
+        } else if (botFacing == 3) {
+            return bestScore(score1, score2, 0, score4);
+        } else {
+            return bestScore(score1, score2, score3, 0);
+        }
+    }
+
     // ====================== COMPUTE NEXT PLAYER ACTION ====================== //
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
@@ -162,6 +666,12 @@ public class BotService {
                 playerAction.heading = getHeadingBetweenWorldCenter(50);
                 System.out.println("AVOIDING WORLD EDGE.");
 
+                // Chasing a Way Bigger Enemy
+            } else if (enemyList.get(0).getSize() < 0.5 * bot.getSize()
+                    && getDistanceBetweenEdge(enemyList.get(0), bot) <= 2 * bot.getSize()) {
+                playerAction.heading = getHeadingBetween(enemyList.get(0));
+                System.out.println("CHASING A WAY SMALLER ENEMY.");
+
                 // Avoid Gas Cloud
             } else if (getDistanceBetweenEdge(nearestGasCloud, bot) < 50) {
                 playerAction.heading = getSpecifiedHeadingBetween(nearestGasCloud, 100);
@@ -174,7 +684,7 @@ public class BotService {
 
                 // Target A Smaller Enemy
             } else if (enemyList.get(0).getSize() + 50 < bot.getSize()
-                    && getDistanceBetweenEdge(enemyList.get(0), bot) <= 600) {
+                    && getDistanceBetweenEdge(enemyList.get(0), bot) <= 2 * bot.getSize()) {
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
                 System.out.println("CHASING AN ENEMY.");
 
