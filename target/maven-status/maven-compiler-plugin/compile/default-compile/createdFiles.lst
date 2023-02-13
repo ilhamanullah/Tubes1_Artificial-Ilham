@@ -6,6 +6,5 @@ Enums\ObjectTypes.class
 Models\GameStateDto.class
 Models\PlayerAction.class
 Models\GameObject.class
-Services\Eatfood.class
 Models\Position.class
 Models\World.class

@@ -3,7 +3,7 @@ package Enums;
 public enum ObjectTypes {
   PLAYER(1),
   FOOD(2),
-  WORM_HOLE(3),
+  WORMHOLE(3),
   GAS_CLOUD(4),
   ASTEROID_FIELD(5),
   TORPEDO_SALVO(6),
@@ -21,7 +21,8 @@ public enum ObjectTypes {
 
   public static ObjectTypes valueOf(Integer value) {
     for (ObjectTypes objectType : ObjectTypes.values()) {
-      if (objectType.value == value) return objectType;
+      if (objectType.value == value)
+        return objectType;
     }
 
     throw new IllegalArgumentException("Value not found");
