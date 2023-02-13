@@ -883,56 +883,57 @@ public class BotService {
 
                                 System.out.println("AVOIDING ASTEROID FIELD.");
 
-                                // Avoid Worm Holes
-                        } else if (!wormHoleList.isEmpty() && getDistanceBetweenEdge(wormHoleList.get(0), bot) < 100) {
+                                // // Avoid Worm Holes
+                                // } else if (!wormHoleList.isEmpty() &&
+                                // getDistanceBetweenEdge(wormHoleList.get(0), bot) < 100) {
 
-                                if (botFacing == 1) {
-                                        if (scoring(gameState) == 2) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                100);
-                                        } else if (scoring(gameState) == 3) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                180);
-                                        } else if (scoring(gameState) == 4) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                260);
-                                        }
-                                } else if (botFacing == 2) {
-                                        if (scoring(gameState) == 1) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                260);
-                                        } else if (scoring(gameState) == 3) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                100);
-                                        } else if (scoring(gameState) == 4) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                180);
-                                        }
-                                } else if (botFacing == 3) {
-                                        if (scoring(gameState) == 1) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                180);
-                                        } else if (scoring(gameState) == 2) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                260);
-                                        } else if (scoring(gameState) == 4) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                100);
-                                        }
-                                } else if (botFacing == 4) {
-                                        if (scoring(gameState) == 1) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                100);
-                                        } else if (scoring(gameState) == 2) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                180);
-                                        } else if (scoring(gameState) == 3) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                                                260);
-                                        }
-                                }
+                                // if (botFacing == 1) {
+                                // if (scoring(gameState) == 2) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 100);
+                                // } else if (scoring(gameState) == 3) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 180);
+                                // } else if (scoring(gameState) == 4) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 260);
+                                // }
+                                // } else if (botFacing == 2) {
+                                // if (scoring(gameState) == 1) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 260);
+                                // } else if (scoring(gameState) == 3) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 100);
+                                // } else if (scoring(gameState) == 4) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 180);
+                                // }
+                                // } else if (botFacing == 3) {
+                                // if (scoring(gameState) == 1) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 180);
+                                // } else if (scoring(gameState) == 2) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 260);
+                                // } else if (scoring(gameState) == 4) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 100);
+                                // }
+                                // } else if (botFacing == 4) {
+                                // if (scoring(gameState) == 1) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 100);
+                                // } else if (scoring(gameState) == 2) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 180);
+                                // } else if (scoring(gameState) == 3) {
+                                // playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
+                                // 260);
+                                // }
+                                // }
 
-                                System.out.println("AVOIDING WORM HOLE.");
+                                // System.out.println("AVOIDING WORM HOLE.");
 
                                 // Target A Smaller Enemy
                         } else if (enemyList.get(0).getSize() + 50 < bot.getSize()
@@ -942,55 +943,9 @@ public class BotService {
 
                                 // Running Away from An Enemy
                         } else if (!enemyList.isEmpty() && enemyList.get(0).getSize() >= bot.getSize()
-                                        && getDistanceBetweenEdge(enemyList.get(0), bot) <= 300) {
+                                        && getDistanceBetweenEdge(enemyList.get(0), bot) <= 250) {
 
-                                if (botFacing == 1) {
-                                        if (scoring(gameState) == 2) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                100);
-                                        } else if (scoring(gameState) == 3) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                180);
-                                        } else if (scoring(gameState) == 4) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                260);
-                                        }
-                                } else if (botFacing == 2) {
-                                        if (scoring(gameState) == 1) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                260);
-                                        } else if (scoring(gameState) == 3) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                100);
-                                        } else if (scoring(gameState) == 4) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                180);
-                                        }
-                                } else if (botFacing == 3) {
-                                        if (scoring(gameState) == 1) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                180);
-                                        } else if (scoring(gameState) == 2) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                260);
-                                        } else if (scoring(gameState) == 4) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                100);
-                                        }
-                                } else if (botFacing == 4) {
-                                        if (scoring(gameState) == 1) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                100);
-                                        } else if (scoring(gameState) == 2) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                180);
-                                        } else if (scoring(gameState) == 3) {
-                                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0),
-                                                                260);
-                                        }
-                                }
-
-                                // playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0), 180);
+                                playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0), 180);
                                 System.out.println("RUNNING AWAY FROM AN ENEMY.");
 
                                 // Going For Food
