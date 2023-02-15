@@ -739,11 +739,21 @@ public class BotService {
                     .sorted(Comparator
                             .comparing(item -> getDistanceBetween(bot, item)))
                     .collect(Collectors.toList());
+            
+            // Get All Teleporter
+            var teleporterlist = gameState.getGameObjects()
+            .stream().filter(teleporter -> teleporter.getGameObjectType() == ObjectTypes.TELEPORTER)
+            .sorted(Comparator 
+                    .comparing(teleporter -> getDistanceBetween(bot, teleporter)))
+            .collect(Collectors.toList());
+
 
             playerAction.action = PlayerActions.FORWARD;
 
             // Display Bot Action Status
             displayBotDetail();
+
+
 
             var botCurrentDirection = bot.getHeading();
             var botFacing = 0;
@@ -796,6 +806,27 @@ public class BotService {
                 }
 
                 System.out.println("AVOIDING WORLD EDGE.");
+
+                
+            }    // Fire Teleport
+            else if (bot.getSize() > 40 && teleporterlist.isEmpty() && getDistanceBetweenEdge(bot, enemyList.get(0)) < 500 && getDistanceBetweenEdge(bot, enemyList.get(0)) > 75 && enemyList.get(0).getSize() < bot.getSize() - 27){
+                playerAction.heading = getHeadingBetween(enemyList.get(0));
+                playerAction.action = PlayerActions.FIRETELEPORT;
+                System.out.println("ready to teleport");
+
+                // Active Teleport if Enemy is Near teleporter
+            } else if (!teleporterlist.isEmpty()){
+                
+                for (GameObject teleporter : teleporterlist){
+
+                    if (getDistanceBetween(enemyList.get(0), teleporter) < 75 && enemyList.get(0).getSize() < bot.getSize() - 6) {
+                        playerAction.heading = getHeadingBetween(enemyList.get(0));
+                        playerAction.action = PlayerActions.TELEPORT;
+                        System.out.println("teleport");
+                        
+                        break;
+                    }
+                }
 
                 // Activate Shield
             } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= 50
