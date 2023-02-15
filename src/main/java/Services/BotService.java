@@ -657,7 +657,7 @@ public class BotService {
         // Bot is still in the game
         if (!gameState.getGameObjects().isEmpty()) {
 
-            // Get List
+            // Get Enemy List
             var enemyList = gameState.playerGameObjects
                     .stream()
                     .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER
@@ -666,46 +666,46 @@ public class BotService {
                             .comparing(player -> getDistanceBetween(bot, player)))
                     .collect(Collectors.toList());
 
-            // Get Asteroid Field
-            var asteroidFieldList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
-
-            // Get Torpedo
-            var torpedoList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
-
-            // Get Gas Cloud
-            var gasCloudList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
-
-            // Get Worm Hole
-            var wormHoleList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.WORMHOLE)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
-
-            // Get Food
+            // Get Nearest Food
             var foodList = gameState.getGameObjects()
                     .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD)
                     .sorted(Comparator
                             .comparing(items -> getDistanceBetween(bot, items)))
                     .collect(Collectors.toList());
 
-            // Get Super Food
+            // Get Nearest Super Food
             var superFoodList = gameState.getGameObjects()
                     .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD)
                     .sorted(Comparator
                             .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
+
+            // Get Nearest Asteroid Field
+            var asteroidFieldList = gameState.getGameObjects()
+                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD)
+                    .sorted(Comparator
+                            .comparing(obj -> getDistanceBetween(bot, obj)))
+                    .collect(Collectors.toList());
+
+            // Get Nearest Gas Cloud
+            var gasCloudList = gameState.getGameObjects()
+                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD)
+                    .sorted(Comparator
+                            .comparing(obj -> getDistanceBetween(bot, obj)))
+                    .collect(Collectors.toList());
+
+            // Get Nearest Worm Hole
+            var wormHoleList = gameState.getGameObjects()
+                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.WORMHOLE)
+                    .sorted(Comparator
+                            .comparing(obj -> getDistanceBetween(bot, obj)))
+                    .collect(Collectors.toList());
+
+            // Get Nearest Worm Hole
+            var torpedoList = gameState.getGameObjects()
+                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO)
+                    .sorted(Comparator
+                            .comparing(obj -> getDistanceBetween(bot, obj)))
                     .collect(Collectors.toList());
 
             playerAction.action = PlayerActions.FORWARD;
@@ -727,7 +727,7 @@ public class BotService {
 
             // Stay in World Zone
             if (gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(bot)
-                    - (bot.getSize() / 2) < 75) {
+                    - (bot.getSize() / 2) < 100) {
 
                 if (botFacing == 1) {
                     if (scoring(gameState) == 2) {
@@ -763,13 +763,14 @@ public class BotService {
                     }
                 }
 
-                // playerAction.heading = getHeadingBetweenWorldCenter(50); // selalu ke kanan
                 System.out.println("AVOIDING WORLD EDGE.");
 
                 // Activate Shield
-            } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) < 100
-                    && bot.getSize() >= 80) {
+            } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= 50
+                    && bot.getSize() >= 30) {
                 playerAction.action = PlayerActions.ACTIVATESHIELD;
+                System.out.print("SIZE OF INCOMING TORPEDO IS: ");
+                System.out.print(torpedoList.get(0).getSize());
                 System.out.println("ACTIVATE SHIELD.");
 
                 // Chasing a Way Smaller Enemy
@@ -777,6 +778,15 @@ public class BotService {
                     && getDistanceBetweenEdge(enemyList.get(0), bot) <= 2 * bot.getSize()) {
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
                 System.out.println("CHASING A WAY SMALLER ENEMY.");
+
+                // Shoot Torpedo while being chased
+            } else if (!enemyList.isEmpty() && bot.getSize() >= 20
+                    && getDistanceBetweenEdge(bot, enemyList.get(0)) <= 250
+                    && enemyList.get(0).getSize() >= bot.getSize()
+                    && bot.torpedoSalvoCount != 0) {
+                playerAction.heading = getHeadingBetween(enemyList.get(0));
+                playerAction.action = PlayerActions.FIRETORPEDOES;
+                System.out.println("SHOOTING TORPEDOS AT INCOMING ENEMY.");
 
                 // Avoid Gas Cloud
             } else if (!gasCloudList.isEmpty() && getDistanceBetweenEdge(gasCloudList.get(0), bot) < 50) {
@@ -891,58 +901,6 @@ public class BotService {
                 }
 
                 System.out.println("AVOIDING ASTEROID FIELD.");
-
-                // Avoid Worm Holes
-            } else if (!wormHoleList.isEmpty() &&
-                    getDistanceBetweenEdge(wormHoleList.get(0), bot) < 100) {
-
-                if (botFacing == 1) {
-                    if (scoring(gameState) == 2) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                100);
-                    } else if (scoring(gameState) == 3) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                180);
-                    } else if (scoring(gameState) == 4) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                260);
-                    }
-                } else if (botFacing == 2) {
-                    if (scoring(gameState) == 1) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                260);
-                    } else if (scoring(gameState) == 3) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                100);
-                    } else if (scoring(gameState) == 4) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                180);
-                    }
-                } else if (botFacing == 3) {
-                    if (scoring(gameState) == 1) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                180);
-                    } else if (scoring(gameState) == 2) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                260);
-                    } else if (scoring(gameState) == 4) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                100);
-                    }
-                } else if (botFacing == 4) {
-                    if (scoring(gameState) == 1) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                100);
-                    } else if (scoring(gameState) == 2) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                180);
-                    } else if (scoring(gameState) == 3) {
-                        playerAction.heading = getSpecifiedHeadingBetween(wormHoleList.get(0),
-                                260);
-                    }
-                }
-
-                System.out.println("AVOIDING WORM HOLE.");
 
                 // Target A Smaller Enemy
             } else if (enemyList.get(0).getSize() + 50 < bot.getSize()
