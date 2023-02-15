@@ -811,10 +811,12 @@ public class BotService {
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
                 System.out.println("CHASING A WAY SMALLER ENEMY.");
 
-                // Shoot Torpedo while being chased
+                // Shoot Torpedo
             } else if (!enemyList.isEmpty() && bot.getSize() >= 20
-                    && getDistanceBetweenEdge(bot, enemyList.get(0)) <= 250
-                    && enemyList.get(0).getSize() >= bot.getSize()
+                    && ((enemyList.get(0).getSize() >= bot.getSize()
+                            && getDistanceBetweenEdge(bot, enemyList.get(0)) <= 250)
+                            || (enemyList.get(0).getSize() < bot.getSize()
+                                    && getDistanceBetweenEdge(bot, enemyList.get(0)) < 70))
                     && bot.torpedoSalvoCount != 0) {
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
                 playerAction.action = PlayerActions.FIRETORPEDOES;
@@ -872,67 +874,67 @@ public class BotService {
                 System.out.println("AVOIDING GAS CLOUD.");
 
                 // Avoid Asteroid Field
-            } else if (!asteroidFieldList.isEmpty()
-                    && getDistanceBetweenEdge(asteroidFieldList.get(0), bot) < 50) {
-                if (botFacing == 1) {
-                    if (scoring(gameState) == 2) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                100);
-                    } else if (scoring(gameState) == 3) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                180);
-                    } else if (scoring(gameState) == 4) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                260);
-                    }
-                } else if (botFacing == 2) {
-                    if (scoring(gameState) == 1) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                260);
-                    } else if (scoring(gameState) == 3) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                100);
-                    } else if (scoring(gameState) == 4) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                180);
-                    }
-                } else if (botFacing == 3) {
-                    if (scoring(gameState) == 1) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                180);
-                    } else if (scoring(gameState) == 2) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                260);
-                    } else if (scoring(gameState) == 4) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                100);
-                    }
-                } else if (botFacing == 4) {
-                    if (scoring(gameState) == 1) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                100);
-                    } else if (scoring(gameState) == 2) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                180);
-                    } else if (scoring(gameState) == 3) {
-                        playerAction.heading = getSpecifiedHeadingBetween(
-                                asteroidFieldList.get(0),
-                                260);
-                    }
-                }
+                // } else if (!asteroidFieldList.isEmpty()
+                // && getDistanceBetweenEdge(asteroidFieldList.get(0), bot) < 50) {
+                // if (botFacing == 1) {
+                // if (scoring(gameState) == 2) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 100);
+                // } else if (scoring(gameState) == 3) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 180);
+                // } else if (scoring(gameState) == 4) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 260);
+                // }
+                // } else if (botFacing == 2) {
+                // if (scoring(gameState) == 1) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 260);
+                // } else if (scoring(gameState) == 3) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 100);
+                // } else if (scoring(gameState) == 4) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 180);
+                // }
+                // } else if (botFacing == 3) {
+                // if (scoring(gameState) == 1) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 180);
+                // } else if (scoring(gameState) == 2) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 260);
+                // } else if (scoring(gameState) == 4) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 100);
+                // }
+                // } else if (botFacing == 4) {
+                // if (scoring(gameState) == 1) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 100);
+                // } else if (scoring(gameState) == 2) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 180);
+                // } else if (scoring(gameState) == 3) {
+                // playerAction.heading = getSpecifiedHeadingBetween(
+                // asteroidFieldList.get(0),
+                // 260);
+                // }
+                // }
 
-                System.out.println("AVOIDING ASTEROID FIELD.");
+                // System.out.println("AVOIDING ASTEROID FIELD.");
 
                 // Target A Smaller Enemy
             } else if (enemyList.get(0).getSize() + 50 < bot.getSize()
