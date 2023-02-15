@@ -766,10 +766,11 @@ public class BotService {
                 System.out.println("AVOIDING WORLD EDGE.");
 
                 // Activate Shield
-            } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= 10
-                    && torpedoList.get(0).getSize() >= 5
+            } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= 50
                     && bot.getSize() >= 30) {
                 playerAction.action = PlayerActions.ACTIVATESHIELD;
+                System.out.print("SIZE OF INCOMING TORPEDO IS: ");
+                System.out.print(torpedoList.get(0).getSize());
                 System.out.println("ACTIVATE SHIELD.");
 
                 // Chasing a Way Smaller Enemy
