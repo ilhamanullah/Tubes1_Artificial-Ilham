@@ -648,6 +648,37 @@ public class BotService {
         return 0;
     }
 
+    public boolean isObjectClear(GameObject object) {
+        // Get Enemy List
+        var nearestEnemy = gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER
+                        && player.getId() != bot.getId())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(object, player)))
+                .collect(Collectors.toList()).get(0);
+
+        // Get Nearest Asteroid Field
+        var nearestAsteroidField = gameState.getGameObjects()
+                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD)
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(object, obj)))
+                .collect(Collectors.toList()).get(0);
+
+        // Get Nearest Gas Cloud
+        var nearestGasCloud = gameState.getGameObjects()
+                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD)
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(object, obj)))
+                .collect(Collectors.toList()).get(0);
+
+        return (getDistanceBetweenEdge(object, nearestEnemy) > 250
+                // && getDistanceBetween(object, nearestAsteroidField) > 50
+                && getDistanceBetween(object, nearestGasCloud) > 50
+                && gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
+                        - (bot.getSize() / 2) > 100);
+    }
+
     // ====================== COMPUTE NEXT PLAYER ACTION ====================== //
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
@@ -664,20 +695,6 @@ public class BotService {
                             && player.getId() != bot.getId())
                     .sorted(Comparator
                             .comparing(player -> getDistanceBetween(bot, player)))
-                    .collect(Collectors.toList());
-
-            // Get Nearest Food
-            var foodList = gameState.getGameObjects()
-                    .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD)
-                    .sorted(Comparator
-                            .comparing(items -> getDistanceBetween(bot, items)))
-                    .collect(Collectors.toList());
-
-            // Get Nearest Super Food
-            var superFoodList = gameState.getGameObjects()
-                    .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD)
-                    .sorted(Comparator
-                            .comparing(item -> getDistanceBetween(bot, item)))
                     .collect(Collectors.toList());
 
             // Get Nearest Asteroid Field
@@ -701,11 +718,26 @@ public class BotService {
                             .comparing(obj -> getDistanceBetween(bot, obj)))
                     .collect(Collectors.toList());
 
-            // Get Nearest Worm Hole
+            // Get Nearest Torpedo
             var torpedoList = gameState.getGameObjects()
                     .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO)
                     .sorted(Comparator
                             .comparing(obj -> getDistanceBetween(bot, obj)))
+                    .collect(Collectors.toList());
+
+            // Get Nearest Food
+            var foodList = gameState.getGameObjects()
+                    .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD && isObjectClear(items))
+                    .sorted(Comparator
+                            .comparing(items -> getDistanceBetween(bot, items)))
+                    .collect(Collectors.toList());
+
+            // Get Nearest Super Food
+            var superFoodList = gameState.getGameObjects()
+                    .stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD && isObjectClear(item))
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
                     .collect(Collectors.toList());
 
             playerAction.action = PlayerActions.FORWARD;
@@ -916,18 +948,20 @@ public class BotService {
                 System.out.println("RUNNING AWAY FROM AN ENEMY.");
 
                 // Going For Food
-            } else {
+            } else if (!foodList.isEmpty() && !superFoodList.isEmpty()) {
 
                 // Prioritizing Super Food
-                if (!superFoodList.isEmpty() && !foodList.isEmpty() && getDistanceBetweenEdge(
-                        superFoodList.get(0),
-                        bot) < getDistanceBetweenEdge(foodList.get(0), bot) + 75) {
+                if (getDistanceBetweenEdge(superFoodList.get(0), bot) < getDistanceBetweenEdge(foodList.get(0), bot)
+                        + 75) {
                     playerAction.heading = getHeadingBetween(superFoodList.get(0));
                     System.out.println("GOING FOR SUPERFOOD.");
                 } else {
                     playerAction.heading = getHeadingBetween(foodList.get(0));
                     System.out.println("GOING FOR FOOD.");
                 }
+            } else {
+                playerAction.heading = getHeadingBetweenWorldCenter(0);
+                System.out.println("GOING TO CENTER.");
             }
         }
 
