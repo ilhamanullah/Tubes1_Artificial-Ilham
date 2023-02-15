@@ -645,7 +645,6 @@ public class BotService {
             return bestScore(score1, score2, score3, 0);
         }
 
-        System.out.println("ERRORERRORERRORERRORERRORERRORERRORERROR");
         return 0;
     }
 
