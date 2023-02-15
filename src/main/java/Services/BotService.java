@@ -701,6 +701,13 @@ public class BotService {
                             .comparing(obj -> getDistanceBetween(bot, obj)))
                     .collect(Collectors.toList());
 
+            // Get Nearest Worm Hole
+            var torpedoList = gameState.getGameObjects()
+                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO)
+                    .sorted(Comparator
+                            .comparing(obj -> getDistanceBetween(bot, obj)))
+                    .collect(Collectors.toList());
+
             playerAction.action = PlayerActions.FORWARD;
 
             // Display Bot Action Status
@@ -720,7 +727,7 @@ public class BotService {
 
             // Stay in World Zone
             if (gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(bot)
-                    - (bot.getSize() / 2) < 75) {
+                    - (bot.getSize() / 2) < 100) {
 
                 if (botFacing == 1) {
                     if (scoring(gameState) == 2) {
@@ -757,6 +764,14 @@ public class BotService {
                 }
 
                 System.out.println("AVOIDING WORLD EDGE.");
+
+                // Activate Shield
+            } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= 50
+                    && bot.getSize() >= 30) {
+                playerAction.action = PlayerActions.ACTIVATESHIELD;
+                System.out.print("SIZE OF INCOMING TORPEDO IS: ");
+                System.out.print(torpedoList.get(0).getSize());
+                System.out.println("ACTIVATE SHIELD.");
 
                 // Chasing a Way Smaller Enemy
             } else if (!enemyList.isEmpty() && enemyList.get(0).getSize() < 0.5 * bot.getSize()
