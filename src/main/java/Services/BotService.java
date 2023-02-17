@@ -174,9 +174,6 @@ public class BotService {
         // Get Nearest Enemy
         var nearestEnemy = getEnemyList(object).get(0);
 
-        // Get Nearest Asteroid Field
-        var nearestAsteroidField = getObjectList(ObjectTypes.ASTEROID_FIELD, object).get(0);
-
         // Get Nearest Gas Cloud
         var nearestGasCloud = getObjectList(ObjectTypes.GAS_CLOUD, object).get(0);
 
@@ -734,6 +731,9 @@ public class BotService {
             // Get Nearest Torpedo List
             var torpedoList = getObjectList(ObjectTypes.TORPEDO_SALVO, bot);
 
+            // Get Nearest Torpedo List
+            var teleporterList = getObjectList(ObjectTypes.TELEPORTER, bot);
+
             // Get Nearest Food List
             var foodList = getFoodList(ObjectTypes.FOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
 
@@ -794,6 +794,30 @@ public class BotService {
                 }
 
                 System.out.println("AVOIDING WORLD EDGE.");
+
+            } // Fire Teleport
+            else if (bot.getSize() > 40 && teleporterList.isEmpty()
+                    && getDistanceBetweenEdge(bot, enemyList.get(0)) < 500
+                    && getDistanceBetweenEdge(bot, enemyList.get(0)) > 75
+                    && enemyList.get(0).getSize() < bot.getSize() - 27) {
+                playerAction.heading = getHeadingBetween(enemyList.get(0));
+                playerAction.action = PlayerActions.FIRETELEPORT;
+                System.out.println("ready to teleport");
+
+                // Active Teleport if Enemy is Near teleporter
+            } else if (!teleporterList.isEmpty()) {
+
+                for (GameObject teleporter : teleporterList) {
+
+                    if (getDistanceBetween(enemyList.get(0), teleporter) < 75
+                            && enemyList.get(0).getSize() < bot.getSize() - 6) {
+                        playerAction.heading = getHeadingBetween(enemyList.get(0));
+                        playerAction.action = PlayerActions.TELEPORT;
+                        System.out.println("teleport");
+
+                        break;
+                    }
+                }
 
                 // Activate Shield
             } else if (!torpedoList.isEmpty()
