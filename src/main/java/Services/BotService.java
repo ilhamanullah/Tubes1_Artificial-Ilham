@@ -209,7 +209,7 @@ public class BotService {
 
         currentTeleporter = null;
         for (GameObject tp : teleporterList) {
-            if (tp.getHeading() == currentTeleporterHeading) {
+            if (tp.getHeading() + 5 >= currentTeleporterHeading && tp.getHeading() - 5 <= currentTeleporterHeading) {
                 currentTeleporter = tp;
                 break;
             }
@@ -752,6 +752,7 @@ public class BotService {
             var threatDistanceTorpedo = 70;
             var threatDistanceGasCloud = 50;
             var threatDistanceEnemy = 250;
+            var threatDistanceTeleporter = 300;
 
             // Get Enemy List
             var enemyList = getEnemyList(bot);
@@ -843,8 +844,45 @@ public class BotService {
 
                 System.out.println("AVOIDING WORLD EDGE.");
 
-            } // Shoot Teleporter
-            else if (currentTeleporterHeading == -999 && currentTeleporter == null
+                // Avoid Teleporter
+            } else if (!teleporterList.isEmpty() && currentTeleporter == null && currentTeleporterHeading == -999
+                    && getDistanceBetweenEdge(teleporterList.get(0), bot) < threatDistanceTeleporter) {
+
+                var score1 = scoringKuadran1(gameState);
+                var score2 = scoringKuadran2(gameState);
+                var score3 = scoringKuadran3(gameState);
+                var score4 = scoringKuadran4(gameState);
+
+                if (getHeadingKuadran(teleporterList.get(0)) == 1) {
+                    if (bestScore(0, score2, 0, score4) == score2) {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), -90);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), 90);
+                    }
+                } else if (getHeadingKuadran(teleporterList.get(0)) == 2) {
+                    if (bestScore(score1, 0, score3, 0) == score1) {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), -90);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), 90);
+                    }
+                } else if (getHeadingKuadran(teleporterList.get(0)) == 3) {
+                    if (bestScore(0, score2, 0, score4) == score2) {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), -90);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), 90);
+                    }
+                } else if (getHeadingKuadran(teleporterList.get(0)) == 4) {
+                    if (bestScore(score1, 0, score3, 0) == score1) {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), -90);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(teleporterList.get(0), 90);
+                    }
+                }
+
+                System.out.println("AVOIDING GAS CLOUD.");
+
+                // Shoot Teleporter
+            } else if (currentTeleporterHeading == -999 && currentTeleporter == null
                     && getDistanceBetweenEdge(bot, enemyList.get(0)) < 500
                     && getDistanceBetweenEdge(bot, enemyList.get(0)) > 75
                     && enemyList.get(0).getSize() < bot.getSize() - 27
