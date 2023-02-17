@@ -10,6 +10,8 @@ public class BotService {
     private GameObject bot;
     private PlayerAction playerAction;
     private GameState gameState;
+    private GameObject currentTeleporter;
+    private int currentTeleporterHeading = -999;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -117,6 +119,8 @@ public class BotService {
     // ==================== DISPLAY STATE ==================== //
 
     public void displayBotDetail() {
+        var teleporterList = getObjectList(ObjectTypes.TELEPORTER, bot);
+
         var currTick = gameState.getWorld().getCurrentTick(); // Get current tick
         var x = bot.getPosition().getX(); // Get bot x position
         var y = bot.getPosition().getY(); // Get bot y position
@@ -125,7 +129,18 @@ public class BotService {
         var h = bot.getHeading(); // Get bot heading
 
         System.out.print(currTick);
-        System.out.print(". P(");
+        System.out.print(". TF(");
+        System.out.print(currentTeleporter != null);
+        System.out.print(") : TH(");
+        System.out.print(currentTeleporterHeading);
+        System.out.print(") : THL(");
+
+        for (GameObject teleporter : teleporterList) {
+            System.out.print(teleporter.getHeading());
+            System.out.print("|");
+        }
+
+        System.out.print(") : P(");
         System.out.print(x);
         System.out.print(",");
         System.out.print(y);
@@ -181,6 +196,25 @@ public class BotService {
                 && getDistanceBetween(object, nearestGasCloud) > threatDistanceGasCloud
                 && gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
                         - (bot.getSize() / 2) > 100);
+    }
+
+    // ==================== TELEPORTER FLAG ==================== //
+
+    public void setTeleporterHeading(int heading) {
+        currentTeleporterHeading = heading;
+    }
+
+    public void setCurrentTeleporter() {
+        var teleporterList = getObjectList(ObjectTypes.TELEPORTER, bot);
+
+        currentTeleporter = null;
+        for (GameObject tp : teleporterList) {
+            if (tp.getHeading() == currentTeleporterHeading) {
+                currentTeleporter = tp;
+                break;
+            }
+            currentTeleporterHeading = -999;
+        }
     }
 
     // ==================== SCORING ==================== //
@@ -722,30 +756,44 @@ public class BotService {
             // Get Enemy List
             var enemyList = getEnemyList(bot);
 
-            // Get Nearest Gas Cloud List
+            // Get Gas Cloud List
             var gasCloudList = getObjectList(ObjectTypes.GAS_CLOUD, bot);
 
-            // Get Nearest Worm Hole List
+            // Get Worm Hole List
             var wormHoleList = getObjectList(ObjectTypes.WORMHOLE, bot);
 
-            // Get Nearest Torpedo List
+            // Get Torpedo List
             var torpedoList = getObjectList(ObjectTypes.TORPEDO_SALVO, bot);
 
-            // Get Nearest Torpedo List
+            // Get Teleporter List
             var teleporterList = getObjectList(ObjectTypes.TELEPORTER, bot);
 
-            // Get Nearest Food List
+            // Get Food List
             var foodList = getFoodList(ObjectTypes.FOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
 
-            // Get Nearest Super Food List
+            // Get Super Food List
             var superFoodList = getFoodList(ObjectTypes.SUPERFOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
 
             playerAction.action = PlayerActions.FORWARD;
+            setCurrentTeleporter();
 
             // Display Bot Action Status
             displayBotDetail();
 
             var botFacingKuadran = getHeadingKuadran(bot);
+
+            // Teleport
+            if (currentTeleporter != null) {
+
+                var nearestEnemy2Teleporter = getEnemyList(currentTeleporter).get(0);
+
+                if (getDistanceBetweenEdge(currentTeleporter, nearestEnemy2Teleporter) < bot.getSize() / 2
+                        && nearestEnemy2Teleporter.getSize() < bot.getSize() - 6) {
+                    playerAction.action = PlayerActions.TELEPORT;
+                    System.out.println("TELEPORT");
+                    setTeleporterHeading(-999);
+                }
+            }
 
             // Stay in World Zone
             if (gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(bot)
@@ -795,37 +843,23 @@ public class BotService {
 
                 System.out.println("AVOIDING WORLD EDGE.");
 
-            } // Fire Teleport
-            else if (bot.getSize() > 40 && teleporterList.isEmpty()
+            } // Shoot Teleporter
+            else if (currentTeleporterHeading == -999 && currentTeleporter == null
                     && getDistanceBetweenEdge(bot, enemyList.get(0)) < 500
                     && getDistanceBetweenEdge(bot, enemyList.get(0)) > 75
-                    && enemyList.get(0).getSize() < bot.getSize() - 27) {
+                    && enemyList.get(0).getSize() < bot.getSize() - 27
+                    && bot.getSize() > 40) {
+
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
+                setTeleporterHeading(getHeadingBetween(enemyList.get(0)));
                 playerAction.action = PlayerActions.FIRETELEPORT;
-                System.out.println("ready to teleport");
-
-                // Active Teleport if Enemy is Near teleporter
-            } else if (!teleporterList.isEmpty()) {
-
-                for (GameObject teleporter : teleporterList) {
-
-                    if (getDistanceBetween(enemyList.get(0), teleporter) < 75
-                            && enemyList.get(0).getSize() < bot.getSize() - 6) {
-                        playerAction.heading = getHeadingBetween(enemyList.get(0));
-                        playerAction.action = PlayerActions.TELEPORT;
-                        System.out.println("teleport");
-
-                        break;
-                    }
-                }
+                System.out.println("SHOOT TELEPORTER");
 
                 // Activate Shield
             } else if (!torpedoList.isEmpty()
                     && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= threatDistanceTorpedo
                     && bot.getSize() >= 30) {
                 playerAction.action = PlayerActions.ACTIVATESHIELD;
-                System.out.print("SIZE OF INCOMING TORPEDO IS: ");
-                System.out.print(torpedoList.get(0).getSize());
                 System.out.println("ACTIVATE SHIELD.");
 
                 // Chasing a Way Smaller Enemy
