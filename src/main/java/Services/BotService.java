@@ -12,6 +12,7 @@ public class BotService {
     private GameState gameState;
     private GameObject currentTeleporter;
     private int currentTeleporterHeading = -999;
+    private boolean isFiredTeleporter = false;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -119,7 +120,6 @@ public class BotService {
     // ==================== DISPLAY STATE ==================== //
 
     public void displayBotDetail() {
-        var teleporterList = getObjectList(ObjectTypes.TELEPORTER, bot);
 
         var currTick = gameState.getWorld().getCurrentTick(); // Get current tick
         var x = bot.getPosition().getX(); // Get bot x position
@@ -129,16 +129,13 @@ public class BotService {
         var h = bot.getHeading(); // Get bot heading
 
         System.out.print(currTick);
-        System.out.print(". TF(");
-        System.out.print(currentTeleporter != null);
-        System.out.print(") : TH(");
-        System.out.print(currentTeleporterHeading);
-        System.out.print(") : THL(");
 
-        for (GameObject teleporter : teleporterList) {
-            System.out.print(teleporter.getHeading());
-            System.out.print("|");
-        }
+        System.out.print(". SC(");
+        System.out.print(bot.shieldCount);
+        System.out.print(") : TC(");
+        System.out.print(bot.teleporterCount);
+        System.out.print(") : TORC(");
+        System.out.print(bot.torpedoSalvoCount);
 
         System.out.print(") : P(");
         System.out.print(x);
@@ -154,6 +151,29 @@ public class BotService {
     }
 
     // ==================== GET LISTS OF GAME OBJECTS ==================== //
+
+    public boolean isObjectClear(GameObject object, List<GameObject> enemyList, List<GameObject> gasCloudList,
+            int threatDistanceEnemy, int threatDistanceGasCloud) {
+
+        if (enemyList.isEmpty() && gasCloudList.isEmpty()) {
+            return (gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
+                    - (bot.getSize() / 2) > 100);
+        } else if (!enemyList.isEmpty() && gasCloudList.isEmpty()) {
+            return (getDistanceBetween(object, enemyList.get(0)) > threatDistanceEnemy &&
+                    gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
+                            - (bot.getSize() / 2) > 100);
+        } else if (enemyList.isEmpty() && !gasCloudList.isEmpty()) {
+            return (getDistanceBetween(object, gasCloudList.get(0)) > threatDistanceGasCloud &&
+                    gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
+                            - (bot.getSize() / 2) > 100);
+        } else {
+            return (getDistanceBetween(object, gasCloudList.get(0)) > threatDistanceGasCloud &&
+                    getDistanceBetween(object, enemyList.get(0)) > threatDistanceEnemy &&
+                    gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
+                            - (bot.getSize() / 2) > 100);
+        }
+
+    }
 
     public List<GameObject> getEnemyList(GameObject referenceObject) {
         return gameState.playerGameObjects
@@ -173,32 +193,23 @@ public class BotService {
                 .collect(Collectors.toList());
     }
 
-    public List<GameObject> getFoodList(ObjectTypes objectType, GameObject referObject, int threatDistanceEnemy,
+    public List<GameObject> getFoodList(ObjectTypes objectType, GameObject referObject, List<GameObject> enemyList,
+            List<GameObject> gasCloudList, int threatDistanceEnemy,
             int threatDistanceGasCloud) {
         return gameState.getGameObjects()
                 .stream()
                 .filter(obj -> obj.getGameObjectType() == objectType
-                        && isObjectClear(obj, threatDistanceEnemy, threatDistanceGasCloud))
+                        && isObjectClear(obj, enemyList, gasCloudList, threatDistanceEnemy, threatDistanceGasCloud))
                 .sorted(Comparator
                         .comparing(obj -> getDistanceBetween(referObject, obj)))
                 .collect(Collectors.toList());
     }
 
-    public boolean isObjectClear(GameObject object, int threatDistanceEnemy, int threatDistanceGasCloud) {
-
-        // Get Nearest Enemy
-        var nearestEnemy = getEnemyList(object).get(0);
-
-        // Get Nearest Gas Cloud
-        var nearestGasCloud = getObjectList(ObjectTypes.GAS_CLOUD, object).get(0);
-
-        return (getDistanceBetweenEdge(object, nearestEnemy) > threatDistanceEnemy
-                && getDistanceBetween(object, nearestGasCloud) > threatDistanceGasCloud
-                && gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
-                        - (bot.getSize() / 2) > 100);
-    }
-
     // ==================== TELEPORTER FLAG ==================== //
+
+    public void setIsFiredTeleporter(boolean isFire) {
+        isFiredTeleporter = isFire;
+    }
 
     public void setTeleporterHeading(int heading) {
         currentTeleporterHeading = heading;
@@ -213,7 +224,7 @@ public class BotService {
                 currentTeleporter = tp;
                 break;
             }
-            currentTeleporterHeading = -999;
+            setTeleporterHeading(-999);
         }
     }
 
@@ -737,9 +748,6 @@ public class BotService {
             // Get Gas Cloud List
             var gasCloudList = getObjectList(ObjectTypes.GAS_CLOUD, bot);
 
-            // Get Worm Hole List
-            var wormHoleList = getObjectList(ObjectTypes.WORMHOLE, bot);
-
             // Get Torpedo List
             var torpedoList = getObjectList(ObjectTypes.TORPEDO_SALVO, bot);
 
@@ -747,16 +755,16 @@ public class BotService {
             var teleporterList = getObjectList(ObjectTypes.TELEPORTER, bot);
 
             // Get Food List
-            var foodList = getFoodList(ObjectTypes.FOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
+            var foodList = getFoodList(ObjectTypes.FOOD, bot, enemyList, gasCloudList, threatDistanceEnemy,
+                    threatDistanceGasCloud);
 
             // Get Super Food List
-            var superFoodList = getFoodList(ObjectTypes.SUPERFOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
+            var superFoodList = getFoodList(ObjectTypes.SUPERFOOD, bot, enemyList, gasCloudList, threatDistanceEnemy,
+                    threatDistanceGasCloud);
 
             playerAction.action = PlayerActions.FORWARD;
-            setCurrentTeleporter();
-
-            // Display Bot Action Status
             displayBotDetail();
+            setCurrentTeleporter();
 
             var botFacingKuadran = getHeadingKuadran(bot);
 
@@ -768,8 +776,9 @@ public class BotService {
                 if (getDistanceBetweenEdge(currentTeleporter, nearestEnemy2Teleporter) < bot.getSize() / 2
                         && nearestEnemy2Teleporter.getSize() < bot.getSize() - 6) {
                     playerAction.action = PlayerActions.TELEPORT;
-                    System.out.println("TELEPORT");
                     setTeleporterHeading(-999);
+                    setIsFiredTeleporter(false);
+                    System.out.println("TELEPORT");
                 }
             }
 
@@ -822,7 +831,8 @@ public class BotService {
                 System.out.println("AVOIDING WORLD EDGE.");
 
                 // Avoid Teleporter
-            } else if (!teleporterList.isEmpty() && currentTeleporter == null && currentTeleporterHeading == -999
+            } else if (!teleporterList.isEmpty() && !isFiredTeleporter && currentTeleporter == null
+                    && currentTeleporterHeading == -999
                     && getDistanceBetweenEdge(teleporterList.get(0), bot) < threatDistanceTeleporter) {
 
                 var score1 = scoringKuadran1(gameState);
@@ -856,22 +866,24 @@ public class BotService {
                     }
                 }
 
-                System.out.println("AVOIDING GAS CLOUD.");
+                System.out.println("AVOIDING TELEPORTER");
 
                 // Shoot Teleporter
-            } else if (currentTeleporterHeading == -999 && currentTeleporter == null
+            } else if (!isFiredTeleporter && currentTeleporterHeading == -999 && currentTeleporter == null
+                    && bot.teleporterCount > 0
                     && getDistanceBetweenEdge(bot, enemyList.get(0)) < 500
                     && getDistanceBetweenEdge(bot, enemyList.get(0)) > 75
                     && enemyList.get(0).getSize() < bot.getSize() - 27
                     && bot.getSize() > 40) {
 
+                playerAction.action = PlayerActions.FIRETELEPORT;
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
                 setTeleporterHeading(getHeadingBetween(enemyList.get(0)));
-                playerAction.action = PlayerActions.FIRETELEPORT;
+                setIsFiredTeleporter(true);
                 System.out.println("SHOOT TELEPORTER");
 
                 // Activate Shield
-            } else if (!torpedoList.isEmpty()
+            } else if (bot.shieldCount > 0 && !torpedoList.isEmpty()
                     && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= threatDistanceTorpedo
                     && bot.getSize() >= 30) {
                 playerAction.action = PlayerActions.ACTIVATESHIELD;
@@ -884,7 +896,7 @@ public class BotService {
                 System.out.println("CHASING A WAY SMALLER ENEMY.");
 
                 // Shoot Torpedo
-            } else if (!enemyList.isEmpty() && bot.getSize() >= 20
+            } else if (!enemyList.isEmpty() && bot.torpedoSalvoCount > 0 && bot.getSize() >= 60
                     && ((enemyList.get(0).getSize() >= bot.getSize()
                             && getDistanceBetweenEdge(bot, enemyList.get(0)) <= threatDistanceEnemy)
                             || (enemyList.get(0).getSize() < bot.getSize()
@@ -958,7 +970,7 @@ public class BotService {
 
                 System.out.println("AVOIDING GAS CLOUD.");
 
-                // Target A Smaller Enemy
+                // Chasing A Smaller Enemy
             } else if (enemyList.get(0).getSize() + 50 < bot.getSize()
                     && getDistanceBetweenEdge(enemyList.get(0), bot) <= 2 * bot.getSize()) {
                 playerAction.heading = getHeadingBetween(enemyList.get(0));
@@ -969,6 +981,7 @@ public class BotService {
                     && getDistanceBetweenEdge(enemyList.get(0), bot) <= threatDistanceEnemy) {
 
                 playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0), 180);
+                setIsFiredTeleporter(false);
                 System.out.println("RUNNING AWAY FROM AN ENEMY.");
 
                 // Going For Food
