@@ -113,7 +113,7 @@ Pembuatan bot penulis mengguanakan pendekatan algoritma greedy dalam melakukan p
 - Buat file run.bat (untuk pengguna windows) dengan konfigurasi seperti di bawah, atau langsung jalankan run.sh untuk di linux. Pastikan mengganti path bot dengan path file bot yang akan digunakan.
 
 ```bash
-"""
+
 @echo off
 :: Game Runner
 cd ./runner-publish/
@@ -142,7 +142,7 @@ start "" java -jar (Masukkan Path dari bot jar di sini...)
 cd ../
 
 pause
-"""
+
 ```
 
 - Clone atau download zip repository ini
