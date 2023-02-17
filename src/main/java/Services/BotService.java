@@ -715,29 +715,6 @@ public class BotService {
         }
     }
 
-    public int scoring(GameState gameState) {
-
-        // Get current bot direction as kuadran
-        var botFacingKuadran = getHeadingKuadran(bot);
-
-        var score1 = scoringKuadran1(gameState);
-        var score2 = scoringKuadran2(gameState);
-        var score3 = scoringKuadran3(gameState);
-        var score4 = scoringKuadran4(gameState);
-
-        if (botFacingKuadran == 1) {
-            return bestScore(0, score2, score3, score4);
-        } else if (botFacingKuadran == 2) {
-            return bestScore(score1, 0, score3, score4);
-        } else if (botFacingKuadran == 3) {
-            return bestScore(score1, score2, 0, score4);
-        } else if (botFacingKuadran == 4) {
-            return bestScore(score1, score2, score3, 0);
-        }
-
-        return 0;
-    }
-
     // ==================== COMPUTE NEXT PLAYER ACTION ==================== //
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
@@ -801,41 +778,41 @@ public class BotService {
                     - (bot.getSize() / 2) < threatDistanceWorldBorder) {
 
                 if (botFacingKuadran == 1) {
-                    if (scoring(gameState) == 2) {
+                    if (bestScore(0, 2, 3, 4) == 2) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
-                    } else if (scoring(gameState) == 3) {
+                    } else if (bestScore(0, 2, 3, 4) == 3) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
-                    } else if (scoring(gameState) == 4) {
+                    } else if (bestScore(0, 2, 3, 4) == 4) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
                     } else {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
                 } else if (botFacingKuadran == 2) {
-                    if (scoring(gameState) == 1) {
+                    if (bestScore(1, 0, 3, 4) == 1) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
-                    } else if (scoring(gameState) == 3) {
+                    } else if (bestScore(1, 0, 3, 4) == 3) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
-                    } else if (scoring(gameState) == 4) {
+                    } else if (bestScore(1, 0, 3, 4) == 4) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     } else {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
                 } else if (botFacingKuadran == 3) {
-                    if (scoring(gameState) == 1) {
+                    if (bestScore(1, 2, 0, 4) == 1) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
-                    } else if (scoring(gameState) == 2) {
+                    } else if (bestScore(1, 2, 0, 4) == 2) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
-                    } else if (scoring(gameState) == 4) {
+                    } else if (bestScore(1, 2, 0, 4) == 4) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
                     } else {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
                 } else if (botFacingKuadran == 4) {
-                    if (scoring(gameState) == 1) {
+                    if (bestScore(1, 2, 3, 0) == 1) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
-                    } else if (scoring(gameState) == 2) {
+                    } else if (bestScore(1, 2, 3, 0) == 2) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
-                    } else if (scoring(gameState) == 3) {
+                    } else if (bestScore(1, 2, 3, 0) == 3) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
                     } else {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
@@ -922,13 +899,13 @@ public class BotService {
                     && getDistanceBetweenEdge(gasCloudList.get(0), bot) < threatDistanceGasCloud) {
 
                 if (botFacingKuadran == 1) {
-                    if (scoring(gameState) == 2) {
+                    if (bestScore(0, 2, 3, 4) == 2) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
-                    } else if (scoring(gameState) == 3) {
+                    } else if (bestScore(0, 2, 3, 4) == 3) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 180);
-                    } else if (scoring(gameState) == 4) {
+                    } else if (bestScore(0, 2, 3, 4) == 4) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
                     } else {
@@ -936,13 +913,13 @@ public class BotService {
                                 180);
                     }
                 } else if (botFacingKuadran == 2) {
-                    if (scoring(gameState) == 1) {
+                    if (bestScore(1, 0, 3, 4) == 1) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
-                    } else if (scoring(gameState) == 3) {
+                    } else if (bestScore(1, 0, 3, 4) == 3) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
-                    } else if (scoring(gameState) == 4) {
+                    } else if (bestScore(1, 0, 3, 4) == 4) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 180);
                     } else {
@@ -950,13 +927,13 @@ public class BotService {
                                 180);
                     }
                 } else if (botFacingKuadran == 3) {
-                    if (scoring(gameState) == 1) {
+                    if (bestScore(1, 2, 0, 4) == 1) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 180);
-                    } else if (scoring(gameState) == 2) {
+                    } else if (bestScore(1, 2, 0, 4) == 2) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
-                    } else if (scoring(gameState) == 4) {
+                    } else if (bestScore(1, 2, 0, 4) == 4) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
                     } else {
@@ -964,13 +941,13 @@ public class BotService {
                                 180);
                     }
                 } else if (botFacingKuadran == 4) {
-                    if (scoring(gameState) == 1) {
+                    if (bestScore(1, 2, 3, 0) == 1) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
-                    } else if (scoring(gameState) == 2) {
+                    } else if (bestScore(1, 2, 3, 0) == 2) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 180);
-                    } else if (scoring(gameState) == 3) {
+                    } else if (bestScore(1, 2, 3, 0) == 3) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
                     } else {
