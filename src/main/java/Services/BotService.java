@@ -307,34 +307,35 @@ public class BotService {
 
         // Smaller Enemy
         for (int i = 0; i < smallerEnemyList.size(); i++) {
-            score += ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
-                    * ((maxDistance(smallerEnemyList)
-                            - getDistanceBetween(bot, smallerEnemyList.get(i)))
-                            / maxDistance(smallerEnemyList));
+            score += (5 * ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
+                    * ((maxDistance(smallerEnemyList) - smallerEnemyList.get(i).getSize())
+                            / maxDistance(smallerEnemyList)))
+                    + 1;
         }
 
         // Food
         for (int i = 0; i < foodList.size(); i++) {
-            score += (maxDistance(foodList)
-                    - getDistanceBetween(bot, foodList.get(i))) / maxDistance(foodList);
+            score += ((maxDistance(foodList) - getDistanceBetweenEdge(foodList.get(i), bot)) / maxDistance(foodList))
+                    + 1;
         }
 
         // Super Food
         for (int i = 0; i < superFoodList.size(); i++) {
-            score += 5 * (((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i)))
-                    / maxDistance(superFoodList)));
+            score += (5
+                    * ((maxDistance(superFoodList) - getDistanceBetweenEdge(superFoodList.get(i), bot))
+                            / maxDistance(superFoodList)))
+                    + 1;
         }
 
         // Bigger Enemy
         for (int i = 0; i < biggerEnemyList.size(); i++) {
-            score += 100 + (bot.getSize() / biggerEnemyList.get(i).getSize())
-                    * (getDistanceBetween(bot, biggerEnemyList.get(i))
-                            / maxDistance(biggerEnemyList));
+            score += 50 * ((biggerEnemyList.get(i).getSize() - bot.getSize()) / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetweenEdge(biggerEnemyList.get(i), bot) / maxDistance(biggerEnemyList));
         }
 
         // Obstacle
         for (int i = 0; i < obstacleList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+            score += 15 * (getDistanceBetweenEdge(obstacleList.get(i), bot) / maxDistance(obstacleList));
         }
 
         // Asteroid
@@ -345,7 +346,8 @@ public class BotService {
 
         // Torpedo
         for (int i = 0; i < torpedoList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i))
+                    / maxDistance(torpedoList));
         }
 
         return score;
@@ -428,34 +430,35 @@ public class BotService {
 
         // Smaller Enemy
         for (int i = 0; i < smallerEnemyList.size(); i++) {
-            score += ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
-                    * ((maxDistance(smallerEnemyList)
-                            - getDistanceBetween(bot, smallerEnemyList.get(i)))
-                            / maxDistance(smallerEnemyList));
+            score += (5 * ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
+                    * ((maxDistance(smallerEnemyList) - biggerEnemyList.get(i).getSize())
+                            / maxDistance(smallerEnemyList)))
+                    + 1;
         }
 
         // Food
         for (int i = 0; i < foodList.size(); i++) {
-            score += (maxDistance(foodList)
-                    - getDistanceBetween(bot, foodList.get(i))) / maxDistance(foodList);
+            score += ((maxDistance(foodList) - getDistanceBetweenEdge(foodList.get(i), bot)) / maxDistance(foodList))
+                    + 1;
         }
 
         // Super Food
         for (int i = 0; i < superFoodList.size(); i++) {
-            score += 5 * (((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i)))
-                    / maxDistance(superFoodList)));
+            score += (5
+                    * ((maxDistance(superFoodList) - getDistanceBetweenEdge(superFoodList.get(i), bot))
+                            / maxDistance(superFoodList)))
+                    + 1;
         }
 
         // Bigger Enemy
         for (int i = 0; i < biggerEnemyList.size(); i++) {
-            score += 100 + (bot.getSize() / biggerEnemyList.get(i).getSize())
-                    * (getDistanceBetween(bot, biggerEnemyList.get(i))
-                            / maxDistance(biggerEnemyList));
+            score += 50 * ((biggerEnemyList.get(i).getSize() - bot.getSize()) / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetweenEdge(biggerEnemyList.get(i), bot) / maxDistance(biggerEnemyList));
         }
 
         // Obstacle
         for (int i = 0; i < obstacleList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+            score += 15 * (getDistanceBetweenEdge(obstacleList.get(i), bot) / maxDistance(obstacleList));
         }
 
         // Asteroid
@@ -466,7 +469,8 @@ public class BotService {
 
         // Torpedo
         for (int i = 0; i < torpedoList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i))
+                    / maxDistance(torpedoList));
         }
 
         return score;
@@ -549,34 +553,35 @@ public class BotService {
 
         // Smaller Enemy
         for (int i = 0; i < smallerEnemyList.size(); i++) {
-            score += ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
-                    * ((maxDistance(smallerEnemyList)
-                            - getDistanceBetween(bot, smallerEnemyList.get(i)))
-                            / maxDistance(smallerEnemyList));
+            score += (5 * ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
+                    * ((maxDistance(smallerEnemyList) - smallerEnemyList.get(i).getSize())
+                            / maxDistance(smallerEnemyList)))
+                    + 1;
         }
 
         // Food
         for (int i = 0; i < foodList.size(); i++) {
-            score += (maxDistance(foodList)
-                    - getDistanceBetween(bot, foodList.get(i))) / maxDistance(foodList);
+            score += ((maxDistance(foodList) - getDistanceBetweenEdge(foodList.get(i), bot)) / maxDistance(foodList))
+                    + 1;
         }
 
         // Super Food
         for (int i = 0; i < superFoodList.size(); i++) {
-            score += 5 * (((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i)))
-                    / maxDistance(superFoodList)));
+            score += (5
+                    * ((maxDistance(superFoodList) - getDistanceBetweenEdge(superFoodList.get(i), bot))
+                            / maxDistance(superFoodList)))
+                    + 1;
         }
 
         // Bigger Enemy
         for (int i = 0; i < biggerEnemyList.size(); i++) {
-            score += 100 + (bot.getSize() / biggerEnemyList.get(i).getSize())
-                    * (getDistanceBetween(bot, biggerEnemyList.get(i))
-                            / maxDistance(biggerEnemyList));
+            score += 50 * ((biggerEnemyList.get(i).getSize() - bot.getSize()) / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetweenEdge(biggerEnemyList.get(i), bot) / maxDistance(biggerEnemyList));
         }
 
         // Obstacle
         for (int i = 0; i < obstacleList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+            score += 15 * (getDistanceBetweenEdge(obstacleList.get(i), bot) / maxDistance(obstacleList));
         }
 
         // Asteroid
@@ -587,7 +592,8 @@ public class BotService {
 
         // Torpedo
         for (int i = 0; i < torpedoList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i))
+                    / maxDistance(torpedoList));
         }
 
         return score;
@@ -670,34 +676,35 @@ public class BotService {
 
         // Smaller Enemy
         for (int i = 0; i < smallerEnemyList.size(); i++) {
-            score += ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
-                    * ((maxDistance(smallerEnemyList)
-                            - getDistanceBetween(bot, smallerEnemyList.get(i)))
-                            / maxDistance(smallerEnemyList));
+            score += (5 * ((bot.getSize() - smallerEnemyList.get(i).getSize()) / bot.getSize())
+                    * ((maxDistance(smallerEnemyList) - smallerEnemyList.get(i).getSize())
+                            / maxDistance(smallerEnemyList)))
+                    + 1;
         }
 
         // Food
         for (int i = 0; i < foodList.size(); i++) {
-            score += (maxDistance(foodList)
-                    - getDistanceBetween(bot, foodList.get(i))) / maxDistance(foodList);
+            score += ((maxDistance(foodList) - getDistanceBetweenEdge(foodList.get(i), bot)) / maxDistance(foodList))
+                    + 1;
         }
 
         // Super Food
         for (int i = 0; i < superFoodList.size(); i++) {
-            score += 5 * (((maxDistance(superFoodList) - getDistanceBetween(bot, superFoodList.get(i)))
-                    / maxDistance(superFoodList)));
+            score += (5
+                    * ((maxDistance(superFoodList) - getDistanceBetweenEdge(superFoodList.get(i), bot))
+                            / maxDistance(superFoodList)))
+                    + 1;
         }
 
         // Bigger Enemy
         for (int i = 0; i < biggerEnemyList.size(); i++) {
-            score += 100 + (bot.getSize() / biggerEnemyList.get(i).getSize())
-                    * (getDistanceBetween(bot, biggerEnemyList.get(i))
-                            / maxDistance(biggerEnemyList));
+            score += 50 * ((biggerEnemyList.get(i).getSize() - bot.getSize()) / biggerEnemyList.get(i).getSize())
+                    * (getDistanceBetweenEdge(biggerEnemyList.get(i), bot) / maxDistance(biggerEnemyList));
         }
 
         // Obstacle
         for (int i = 0; i < obstacleList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, obstacleList.get(i)) / maxDistance(obstacleList));
+            score += 15 * (getDistanceBetweenEdge(obstacleList.get(i), bot) / maxDistance(obstacleList));
         }
 
         // Asteroid
@@ -708,7 +715,8 @@ public class BotService {
 
         // Torpedo
         for (int i = 0; i < torpedoList.size(); i++) {
-            score += 15 * (getDistanceBetween(bot, torpedoList.get(i)) / maxDistance(torpedoList));
+            score += 15 * (getDistanceBetween(bot, torpedoList.get(i))
+                    / maxDistance(torpedoList));
         }
 
         return score;
