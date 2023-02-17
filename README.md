@@ -23,6 +23,7 @@ Pembuatan bot penulis mengguanakan pendekatan algoritma greedy dalam melakukan p
 - Net Core versi 3.1 dan 5.0
 
 ## Program structure
+```bash
 .
 │   Dockerfile
 │   pom.xml
@@ -104,12 +105,14 @@ Pembuatan bot penulis mengguanakan pendekatan algoritma greedy dalam melakukan p
                 └───default-compile
                         createdFiles.lst
                         inputFiles.lst
+```
 
 ## How to run program
 - Instal dan download semua requirement yang diperlukan 
 - Download starter pack pada link berikut : [Starter Pack](https://github.com/EntelectChallenge/2021-Galaxio/releases/tag/2021.3.2)
 - Buat file run.bat (untuk pengguna windows) dengan konfigurasi seperti di bawah, atau langsung jalankan run.sh untuk di linux. Pastikan mengganti path bot dengan path file bot yang akan digunakan.
 
+```bash
 """
 @echo off
 :: Game Runner
@@ -140,6 +143,7 @@ cd ../
 
 pause
 """
+```
 
 - Clone atau download zip repository ini
 - Jalankan run.bat
