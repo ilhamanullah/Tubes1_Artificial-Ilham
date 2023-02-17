@@ -47,6 +47,12 @@ public class BotService {
         optionalBot.ifPresent(bot -> this.bot = bot);
     }
 
+    public int toDegrees(double v) {
+        return (int) (v * (180 / Math.PI));
+    }
+
+    // ==================== GET DISTANCE ==================== //
+
     public double getDistanceBetween(GameObject object1, GameObject object2) {
         var triangleX = Math.abs(object1.getPosition().x - object2.getPosition().x);
         var triangleY = Math.abs(object1.getPosition().y - object2.getPosition().y);
@@ -56,6 +62,27 @@ public class BotService {
     public double getDistanceBetweenEdge(GameObject object1, GameObject object2) {
         return getDistanceBetween(object1, object2) - (object1.getSize() / 2) - (object2.getSize() / 2);
     }
+
+    public double getDistanceBetweenWorldCenter(GameObject object1) {
+        var triangleX = Math.abs(object1.getPosition().x);
+        var triangleY = Math.abs(object1.getPosition().y);
+        return Math.sqrt(triangleX * triangleX + triangleY * triangleY);
+    }
+
+    public double maxDistance(List<GameObject> objList) {
+
+        double max = 0;
+
+        for (int i = 0; i < objList.size(); i++) {
+            if (getDistanceBetween(objList.get(i), bot) > max) {
+                max = getDistanceBetween(objList.get(i), bot);
+            }
+        }
+
+        return max;
+    }
+
+    // ==================== GET HEADING ==================== //
 
     public int getHeadingBetween(GameObject otherObject) {
         var direction = toDegrees(Math.atan2(otherObject.getPosition().y - bot.getPosition().y,
@@ -69,9 +96,25 @@ public class BotService {
         return (direction + degrees) % 360;
     }
 
-    public int toDegrees(double v) {
-        return (int) (v * (180 / Math.PI));
+    public int getHeadingBetweenWorldCenter(int degrees) {
+        var direction = toDegrees(Math.atan2(-bot.getPosition().y, -bot.getPosition().x));
+        return (direction + degrees) % 360;
     }
+
+    public int getHeadingKuadran(GameObject object) {
+        var currentDirection = object.getHeading();
+        if (currentDirection > 0 && currentDirection <= 90) {
+            return 1;
+        } else if (currentDirection > 90 && currentDirection <= 180) {
+            return 2;
+        } else if (currentDirection > 180 && currentDirection <= 270) {
+            return 3;
+        } else {
+            return 4;
+        }
+    }
+
+    // ==================== DISPLAY STATE ==================== //
 
     public void displayBotDetail() {
         var currTick = gameState.getWorld().getCurrentTick(); // Get current tick
@@ -95,29 +138,55 @@ public class BotService {
         System.out.print(") : ");
     }
 
-    public double getDistanceBetweenWorldCenter(GameObject object1) {
-        var triangleX = Math.abs(object1.getPosition().x);
-        var triangleY = Math.abs(object1.getPosition().y);
-        return Math.sqrt(triangleX * triangleX + triangleY * triangleY);
+    // ==================== GET LISTS OF GAME OBJECTS ==================== //
+
+    public List<GameObject> getEnemyList(GameObject referenceObject) {
+        return gameState.playerGameObjects
+                .stream()
+                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER
+                        && player.getId() != bot.getId())
+                .sorted(Comparator
+                        .comparing(player -> getDistanceBetween(referenceObject, player)))
+                .collect(Collectors.toList());
     }
 
-    public int getHeadingBetweenWorldCenter(int degrees) {
-        var direction = toDegrees(Math.atan2(-bot.getPosition().y, -bot.getPosition().x));
-        return (direction + degrees) % 360;
+    public List<GameObject> getObjectList(ObjectTypes objectType, GameObject referObject) {
+        return gameState.getGameObjects()
+                .stream().filter(obj -> obj.getGameObjectType() == objectType)
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(referObject, obj)))
+                .collect(Collectors.toList());
     }
 
-    public double maxDistance(List<GameObject> objList) {
-
-        double max = 0;
-
-        for (int i = 0; i < objList.size(); i++) {
-            if (getDistanceBetween(objList.get(i), bot) > max) {
-                max = getDistanceBetween(objList.get(i), bot);
-            }
-        }
-
-        return max;
+    public List<GameObject> getFoodList(ObjectTypes objectType, GameObject referObject, int threatDistanceEnemy,
+            int threatDistanceGasCloud) {
+        return gameState.getGameObjects()
+                .stream()
+                .filter(obj -> obj.getGameObjectType() == objectType
+                        && isObjectClear(obj, threatDistanceEnemy, threatDistanceGasCloud))
+                .sorted(Comparator
+                        .comparing(obj -> getDistanceBetween(referObject, obj)))
+                .collect(Collectors.toList());
     }
+
+    public boolean isObjectClear(GameObject object, int threatDistanceEnemy, int threatDistanceGasCloud) {
+
+        // Get Nearest Enemy
+        var nearestEnemy = getEnemyList(object).get(0);
+
+        // Get Nearest Asteroid Field
+        var nearestAsteroidField = getObjectList(ObjectTypes.ASTEROID_FIELD, object).get(0);
+
+        // Get Nearest Gas Cloud
+        var nearestGasCloud = getObjectList(ObjectTypes.GAS_CLOUD, object).get(0);
+
+        return (getDistanceBetweenEdge(object, nearestEnemy) > threatDistanceEnemy
+                && getDistanceBetween(object, nearestGasCloud) > threatDistanceGasCloud
+                && gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
+                        - (bot.getSize() / 2) > 100);
+    }
+
+    // ==================== SCORING ==================== //
 
     public double scoringKuadran1(GameState gameState) {
 
@@ -618,68 +687,27 @@ public class BotService {
     public int scoring(GameState gameState) {
 
         // Get current bot direction as kuadran
-        var botCurrentDirection = bot.getHeading();
-        var botFacing = 0;
-        if (botCurrentDirection > 0 && botCurrentDirection <= 90) {
-            botFacing = 1;
-        } else if (botCurrentDirection > 90 && botCurrentDirection <= 180) {
-            botFacing = 2;
-        } else if (botCurrentDirection > 180 && botCurrentDirection <= 270) {
-            botFacing = 3;
-        } else {
-            botFacing = 4;
-        }
+        var botFacingKuadran = getHeadingKuadran(bot);
 
         var score1 = scoringKuadran1(gameState);
         var score2 = scoringKuadran2(gameState);
         var score3 = scoringKuadran3(gameState);
         var score4 = scoringKuadran4(gameState);
 
-        if (botFacing == 1) {
+        if (botFacingKuadran == 1) {
             return bestScore(0, score2, score3, score4);
-        } else if (botFacing == 2) {
+        } else if (botFacingKuadran == 2) {
             return bestScore(score1, 0, score3, score4);
-        } else if (botFacing == 3) {
+        } else if (botFacingKuadran == 3) {
             return bestScore(score1, score2, 0, score4);
-        } else if (botFacing == 4) {
+        } else if (botFacingKuadran == 4) {
             return bestScore(score1, score2, score3, 0);
         }
 
         return 0;
     }
 
-    public boolean isObjectClear(GameObject object) {
-        // Get Enemy List
-        var nearestEnemy = gameState.playerGameObjects
-                .stream()
-                .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER
-                        && player.getId() != bot.getId())
-                .sorted(Comparator
-                        .comparing(player -> getDistanceBetween(object, player)))
-                .collect(Collectors.toList()).get(0);
-
-        // Get Nearest Asteroid Field
-        var nearestAsteroidField = gameState.getGameObjects()
-                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD)
-                .sorted(Comparator
-                        .comparing(obj -> getDistanceBetween(object, obj)))
-                .collect(Collectors.toList()).get(0);
-
-        // Get Nearest Gas Cloud
-        var nearestGasCloud = gameState.getGameObjects()
-                .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD)
-                .sorted(Comparator
-                        .comparing(obj -> getDistanceBetween(object, obj)))
-                .collect(Collectors.toList()).get(0);
-
-        return (getDistanceBetweenEdge(object, nearestEnemy) > 250
-                // && getDistanceBetween(object, nearestAsteroidField) > 50
-                && getDistanceBetween(object, nearestGasCloud) > 50
-                && gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(object)
-                        - (bot.getSize() / 2) > 100);
-    }
-
-    // ====================== COMPUTE NEXT PLAYER ACTION ====================== //
+    // ==================== COMPUTE NEXT PLAYER ACTION ==================== //
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
         playerAction.action = PlayerActions.FORWARD;
@@ -688,117 +716,88 @@ public class BotService {
         // Bot is still in the game
         if (!gameState.getGameObjects().isEmpty()) {
 
+            // Threat Distances
+            var threatDistanceWorldBorder = 100;
+            var threatDistanceTorpedo = 70;
+            var threatDistanceGasCloud = 50;
+            var threatDistanceEnemy = 250;
+
             // Get Enemy List
-            var enemyList = gameState.playerGameObjects
-                    .stream()
-                    .filter(player -> player.getGameObjectType() == ObjectTypes.PLAYER
-                            && player.getId() != bot.getId())
-                    .sorted(Comparator
-                            .comparing(player -> getDistanceBetween(bot, player)))
-                    .collect(Collectors.toList());
+            var enemyList = getEnemyList(bot);
 
-            // Get Nearest Asteroid Field
-            var asteroidFieldList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.ASTEROID_FIELD)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
+            // Get Nearest Gas Cloud List
+            var gasCloudList = getObjectList(ObjectTypes.GAS_CLOUD, bot);
 
-            // Get Nearest Gas Cloud
-            var gasCloudList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.GAS_CLOUD)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
+            // Get Nearest Worm Hole List
+            var wormHoleList = getObjectList(ObjectTypes.WORMHOLE, bot);
 
-            // Get Nearest Worm Hole
-            var wormHoleList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.WORMHOLE)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
+            // Get Nearest Torpedo List
+            var torpedoList = getObjectList(ObjectTypes.TORPEDO_SALVO, bot);
 
-            // Get Nearest Torpedo
-            var torpedoList = gameState.getGameObjects()
-                    .stream().filter(obj -> obj.getGameObjectType() == ObjectTypes.TORPEDO_SALVO)
-                    .sorted(Comparator
-                            .comparing(obj -> getDistanceBetween(bot, obj)))
-                    .collect(Collectors.toList());
+            // Get Nearest Food List
+            var foodList = getFoodList(ObjectTypes.FOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
 
-            // Get Nearest Food
-            var foodList = gameState.getGameObjects()
-                    .stream().filter(items -> items.getGameObjectType() == ObjectTypes.FOOD && isObjectClear(items))
-                    .sorted(Comparator
-                            .comparing(items -> getDistanceBetween(bot, items)))
-                    .collect(Collectors.toList());
-
-            // Get Nearest Super Food
-            var superFoodList = gameState.getGameObjects()
-                    .stream()
-                    .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD && isObjectClear(item))
-                    .sorted(Comparator
-                            .comparing(item -> getDistanceBetween(bot, item)))
-                    .collect(Collectors.toList());
+            // Get Nearest Super Food List
+            var superFoodList = getFoodList(ObjectTypes.SUPERFOOD, bot, threatDistanceEnemy, threatDistanceGasCloud);
 
             playerAction.action = PlayerActions.FORWARD;
 
             // Display Bot Action Status
             displayBotDetail();
 
-            var botCurrentDirection = bot.getHeading();
-            var botFacing = 0;
-            if (botCurrentDirection > 0 && botCurrentDirection <= 90) {
-                botFacing = 1;
-            } else if (botCurrentDirection > 90 && botCurrentDirection <= 180) {
-                botFacing = 2;
-            } else if (botCurrentDirection > 180 && botCurrentDirection <= 270) {
-                botFacing = 3;
-            } else {
-                botFacing = 4;
-            }
+            var botFacingKuadran = getHeadingKuadran(bot);
 
             // Stay in World Zone
             if (gameState.getWorld().getRadius() - getDistanceBetweenWorldCenter(bot)
-                    - (bot.getSize() / 2) < 100) {
+                    - (bot.getSize() / 2) < threatDistanceWorldBorder) {
 
-                if (botFacing == 1) {
+                if (botFacingKuadran == 1) {
                     if (scoring(gameState) == 2) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
                     } else if (scoring(gameState) == 3) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     } else if (scoring(gameState) == 4) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
+                    } else {
+                        playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
-                } else if (botFacing == 2) {
+                } else if (botFacingKuadran == 2) {
                     if (scoring(gameState) == 1) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
                     } else if (scoring(gameState) == 3) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
                     } else if (scoring(gameState) == 4) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
+                    } else {
+                        playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
-                } else if (botFacing == 3) {
+                } else if (botFacingKuadran == 3) {
                     if (scoring(gameState) == 1) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     } else if (scoring(gameState) == 2) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
                     } else if (scoring(gameState) == 4) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
+                    } else {
+                        playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
-                } else if (botFacing == 4) {
+                } else if (botFacingKuadran == 4) {
                     if (scoring(gameState) == 1) {
                         playerAction.heading = getHeadingBetweenWorldCenter(-45);
                     } else if (scoring(gameState) == 2) {
                         playerAction.heading = getHeadingBetweenWorldCenter(0);
                     } else if (scoring(gameState) == 3) {
                         playerAction.heading = getHeadingBetweenWorldCenter(45);
+                    } else {
+                        playerAction.heading = getHeadingBetweenWorldCenter(0);
                     }
                 }
 
                 System.out.println("AVOIDING WORLD EDGE.");
 
                 // Activate Shield
-            } else if (!torpedoList.isEmpty() && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= 50
+            } else if (!torpedoList.isEmpty()
+                    && getDistanceBetweenEdge(bot, torpedoList.get(0)) <= threatDistanceTorpedo
                     && bot.getSize() >= 30) {
                 playerAction.action = PlayerActions.ACTIVATESHIELD;
                 System.out.print("SIZE OF INCOMING TORPEDO IS: ");
@@ -814,7 +813,7 @@ public class BotService {
                 // Shoot Torpedo
             } else if (!enemyList.isEmpty() && bot.getSize() >= 20
                     && ((enemyList.get(0).getSize() >= bot.getSize()
-                            && getDistanceBetweenEdge(bot, enemyList.get(0)) <= 250)
+                            && getDistanceBetweenEdge(bot, enemyList.get(0)) <= threatDistanceEnemy)
                             || (enemyList.get(0).getSize() < bot.getSize()
                                     && getDistanceBetweenEdge(bot, enemyList.get(0)) < 70))
                     && bot.torpedoSalvoCount != 0) {
@@ -823,9 +822,10 @@ public class BotService {
                 System.out.println("SHOOTING TORPEDOS AT INCOMING ENEMY.");
 
                 // Avoid Gas Cloud
-            } else if (!gasCloudList.isEmpty() && getDistanceBetweenEdge(gasCloudList.get(0), bot) < 50) {
+            } else if (!gasCloudList.isEmpty()
+                    && getDistanceBetweenEdge(gasCloudList.get(0), bot) < threatDistanceGasCloud) {
 
-                if (botFacing == 1) {
+                if (botFacingKuadran == 1) {
                     if (scoring(gameState) == 2) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
@@ -835,8 +835,11 @@ public class BotService {
                     } else if (scoring(gameState) == 4) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
+                                180);
                     }
-                } else if (botFacing == 2) {
+                } else if (botFacingKuadran == 2) {
                     if (scoring(gameState) == 1) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
@@ -846,8 +849,11 @@ public class BotService {
                     } else if (scoring(gameState) == 4) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 180);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
+                                180);
                     }
-                } else if (botFacing == 3) {
+                } else if (botFacingKuadran == 3) {
                     if (scoring(gameState) == 1) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 180);
@@ -857,8 +863,11 @@ public class BotService {
                     } else if (scoring(gameState) == 4) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
+                                180);
                     }
-                } else if (botFacing == 4) {
+                } else if (botFacingKuadran == 4) {
                     if (scoring(gameState) == 1) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 100);
@@ -868,73 +877,13 @@ public class BotService {
                     } else if (scoring(gameState) == 3) {
                         playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
                                 260);
+                    } else {
+                        playerAction.heading = getSpecifiedHeadingBetween(gasCloudList.get(0),
+                                180);
                     }
                 }
 
                 System.out.println("AVOIDING GAS CLOUD.");
-
-                // Avoid Asteroid Field
-                // } else if (!asteroidFieldList.isEmpty()
-                // && getDistanceBetweenEdge(asteroidFieldList.get(0), bot) < 50) {
-                // if (botFacing == 1) {
-                // if (scoring(gameState) == 2) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 100);
-                // } else if (scoring(gameState) == 3) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 180);
-                // } else if (scoring(gameState) == 4) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 260);
-                // }
-                // } else if (botFacing == 2) {
-                // if (scoring(gameState) == 1) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 260);
-                // } else if (scoring(gameState) == 3) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 100);
-                // } else if (scoring(gameState) == 4) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 180);
-                // }
-                // } else if (botFacing == 3) {
-                // if (scoring(gameState) == 1) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 180);
-                // } else if (scoring(gameState) == 2) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 260);
-                // } else if (scoring(gameState) == 4) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 100);
-                // }
-                // } else if (botFacing == 4) {
-                // if (scoring(gameState) == 1) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 100);
-                // } else if (scoring(gameState) == 2) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 180);
-                // } else if (scoring(gameState) == 3) {
-                // playerAction.heading = getSpecifiedHeadingBetween(
-                // asteroidFieldList.get(0),
-                // 260);
-                // }
-                // }
-
-                // System.out.println("AVOIDING ASTEROID FIELD.");
 
                 // Target A Smaller Enemy
             } else if (enemyList.get(0).getSize() + 50 < bot.getSize()
@@ -944,7 +893,7 @@ public class BotService {
 
                 // Running Away from An Enemy
             } else if (!enemyList.isEmpty() && enemyList.get(0).getSize() >= bot.getSize()
-                    && getDistanceBetweenEdge(enemyList.get(0), bot) <= 250) {
+                    && getDistanceBetweenEdge(enemyList.get(0), bot) <= threatDistanceEnemy) {
 
                 playerAction.heading = getSpecifiedHeadingBetween(enemyList.get(0), 180);
                 System.out.println("RUNNING AWAY FROM AN ENEMY.");
